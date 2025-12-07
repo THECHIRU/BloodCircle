@@ -23,26 +23,47 @@ def register():
     form = RegistrationForm()
     
     if form.validate_on_submit():
-        # Create new user (verified by default, no OTP needed)
-        # Don't assign role yet - let user choose
-        user = User(
-            email=form.email.data.lower(),
-            phone=None,  # No phone collected during registration
-            role=None,  # No role assigned yet - user will choose
-            is_verified=True,  # Auto-verified, no OTP needed
-            is_active=True
-        )
-        user.set_password(form.password.data)
-        
-        db.session.add(user)
-        db.session.commit()
-        
-        flash('Registration successful! Please select your role to continue.', 'success')
-        
-        # Log the user in automatically
-        login_user(user, remember=True)
-        
-        return redirect(url_for('auth.select_role'))
+        try:
+            # Create new user (verified by default, no OTP needed)
+            # Don't assign role yet - let user choose
+            user = User(
+                email=form.email.data.lower(),
+                phone=None,  # No phone collected during registration
+                role=None,  # No role assigned yet - user will choose
+                is_verified=True,  # Auto-verified, no OTP needed
+                is_active=True
+            )
+            user.set_password(form.password.data)
+            
+            db.session.add(user)
+            db.session.commit()
+            
+            flash('Registration successful! Please select your role to continue.', 'success')
+            
+            # Log the user in automatically
+            login_user(user, remember=True)
+            
+            return redirect(url_for('auth.select_role'))
+            
+        except Exception as e:
+            db.session.rollback()
+            # Log the actual error for debugging
+            print(f"Registration error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            
+            # User-friendly error message
+            if 'unique constraint' in str(e).lower() or 'duplicate' in str(e).lower():
+                if 'email' in str(e).lower():
+                    flash('This email is already registered. Please login or use a different email.', 'danger')
+                elif 'phone' in str(e).lower():
+                    flash('Database error. Please try again or contact support.', 'danger')
+                else:
+                    flash('This account already exists. Please login.', 'danger')
+            else:
+                flash('Registration failed. Please try again or contact support.', 'danger')
+            
+            return render_template('auth/register.html', form=form, title='Register')
     
     return render_template('auth/register.html', form=form, title='Register')
 
