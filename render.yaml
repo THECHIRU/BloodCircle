@@ -2,6 +2,7 @@ services:
   - type: web
     name: blood-donation-network
     env: python
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "gunicorn run:app"
     envVars:
@@ -40,3 +41,4 @@ databases:
   - name: blood-donation-db
     databaseName: blood_donation
     user: blood_donation_user
+    plan: free
