@@ -23,12 +23,12 @@ def register():
     form = RegistrationForm()
     
     if form.validate_on_submit():
-        # Create new user
+        # Create new user (verified by default, no OTP needed)
         user = User(
             email=form.email.data.lower(),
             phone=form.phone.data,
             role='donor',  # Default role, will be updated during profile creation
-            is_verified=False,
+            is_verified=True,  # Auto-verified, no OTP needed
             is_active=True
         )
         user.set_password(form.password.data)
@@ -36,26 +36,12 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        # Store user ID in session for OTP verification
-        session['pending_user_id'] = user.id
-        session['pending_email'] = user.email
-        session['pending_phone'] = user.phone
+        flash('Registration successful! Please select your role to continue.', 'success')
         
-        # Send OTP
-        success, message = create_and_send_otp(
-            user_id=user.id,
-            email=user.email,
-            phone=user.phone,
-            otp_type='email',
-            user_name='User'
-        )
+        # Log the user in automatically
+        login_user(user, remember=True)
         
-        if success:
-            flash('Registration successful! Please verify your account with the OTP sent to your email/phone.', 'success')
-            return redirect(url_for('auth.verify_otp_route'))
-        else:
-            flash(f'Registration successful, but failed to send OTP: {message}', 'warning')
-            return redirect(url_for('auth.verify_otp_route'))
+        return redirect(url_for('auth.select_role'))
     
     return render_template('auth/register.html', form=form, title='Register')
 
@@ -226,13 +212,7 @@ def login():
                 flash('Your account has been deactivated. Please contact support.', 'danger')
                 return redirect(url_for('auth.login'))
             
-            if not user.is_verified:
-                flash('Please verify your account first.', 'warning')
-                session['pending_user_id'] = user.id
-                session['pending_email'] = user.email
-                session['pending_phone'] = user.phone
-                return redirect(url_for('auth.verify_otp_route'))
-            
+            # Remove OTP verification requirement - users are auto-verified
             # Check if user has completed profile
             if user.role == 'donor' and not user.donor:
                 flash('Please complete your donor profile.', 'info')
@@ -248,21 +228,18 @@ def login():
                 db.session.commit()
                 return redirect(url_for('patient.register'))
             
-            # Admin login requires OTP
-            if user.role == 'admin':
-                from app.utils import send_otp_for_login
-                email_success, email_msg, _ = send_otp_for_login(user_id=user.id, email=user.email, otp_type='email')
+            # Admin and sub-admin login (no OTP required)
+            if user.role == 'admin' or user.role == 'sub_admin':
+                login_user(user, remember=form.remember_me.data)
+                user.last_login = datetime.utcnow()
+                db.session.commit()
                 
-                if email_success:
-                    session['login_user_id'] = user.id
-                    session['login_otp_type'] = 'email'
-                    session['remember_me'] = form.remember_me.data
-                    session['admin_login'] = True
-                    flash(f'OTP sent to {user.email}', 'success')
-                    return redirect(url_for('auth.verify_admin_login_otp'))
+                if user.role == 'admin':
+                    flash('Welcome back, Admin!', 'success')
+                    return redirect(url_for('admin.dashboard'))
                 else:
-                    flash(f'Failed to send OTP: {email_msg}', 'danger')
-                    return redirect(url_for('auth.login'))
+                    flash('Welcome back, Sub-Admin!', 'success')
+                    return redirect(url_for('admin.sub_admin_dashboard'))
             
             # Login successful for non-admin users
             login_user(user, remember=form.remember_me.data)
