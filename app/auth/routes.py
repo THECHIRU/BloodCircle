@@ -24,10 +24,11 @@ def register():
     
     if form.validate_on_submit():
         # Create new user (verified by default, no OTP needed)
+        # Don't assign role yet - let user choose
         user = User(
             email=form.email.data.lower(),
             phone=form.phone.data,
-            role='donor',  # Default role, will be updated during profile creation
+            role=None,  # No role assigned yet - user will choose
             is_verified=True,  # Auto-verified, no OTP needed
             is_active=True
         )
@@ -94,13 +95,26 @@ def verify_otp_route():
 
 
 @auth_bp.route('/select-role')
+@login_required
 def select_role():
     """Allow user to select their role (donor or patient)."""
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+    # If user already has a role, redirect to appropriate dashboard
+    if current_user.role == 'admin':
+        return redirect(url_for('admin.dashboard'))
+    elif current_user.role == 'sub_admin':
+        return redirect(url_for('admin.sub_admin_dashboard'))
+    elif current_user.role == 'donor':
+        if current_user.donor:
+            return redirect(url_for('donor.dashboard'))
+        else:
+            return redirect(url_for('donor.register'))
+    elif current_user.role == 'patient':
+        if current_user.patient:
+            return redirect(url_for('patient.dashboard'))
+        else:
+            return redirect(url_for('patient.register'))
     
-    # This would typically check session for verified but not logged in user
-    # For simplicity, we'll show the role selection page
+    # User has no role yet - show role selection page
     return render_template('auth/select_role.html', title='Select Role')
 
 
@@ -225,7 +239,14 @@ def login():
                     flash('Welcome back, Sub-Admin!', 'success')
                     return redirect(url_for('admin.sub_admin_dashboard'))
             
-            # Remove OTP verification requirement - users are auto-verified
+            # Check if user has selected a role yet
+            if not user.role:
+                login_user(user, remember=form.remember_me.data)
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+                flash('Please select your role to continue.', 'info')
+                return redirect(url_for('auth.select_role'))
+            
             # Check if user has completed profile
             if user.role == 'donor' and not user.donor:
                 flash('Please complete your donor profile.', 'info')
