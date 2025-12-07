@@ -20,8 +20,8 @@ class RegistrationForm(FlaskForm):
         Email(message='Invalid email address'),
         Length(max=120)
     ])
-    phone = TelField('Phone Number', validators=[
-        DataRequired(message='Phone number is required'),
+    phone = TelField('Phone Number (Optional)', validators=[
+        Optional(),
         Length(min=10, max=20, message='Phone number must be 10-20 characters')
     ])
     password = PasswordField('Password', validators=[
@@ -41,6 +41,8 @@ class RegistrationForm(FlaskForm):
     
     def validate_phone(self, field):
         """Check if phone number already exists."""
+        if not field.data:  # Skip validation if phone is empty
+            return
         # Remove any non-digit characters
         clean_phone = ''.join(filter(str.isdigit, field.data))
         existing_user = User.query.filter(
