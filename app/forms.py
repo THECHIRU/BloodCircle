@@ -345,14 +345,10 @@ class ResendOTPForm(FlaskForm):
 
 
 class AdminLoginForm(FlaskForm):
-    """Admin login form with enhanced security - requires email AND phone."""
+    """Admin login form with enhanced security."""
     email = EmailField('Email Address', validators=[
         DataRequired(message='Email is required'),
         Email(message='Invalid email address')
-    ])
-    phone = StringField('Phone Number', validators=[
-        DataRequired(message='Phone number is required'),
-        Length(min=10, max=20, message='Invalid phone number')
     ])
     password = PasswordField('Password', validators=[
         DataRequired(message='Password is required')

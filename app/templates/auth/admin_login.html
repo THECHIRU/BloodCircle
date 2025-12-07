@@ -9,7 +9,7 @@
             <div class="card shadow-lg">
                 <div class="card-header bg-danger text-white text-center">
                     <h3><i class="fas fa-shield-alt me-2"></i>Admin Login</h3>
-                    <p class="mb-0 small">Enhanced Security - Email & Phone Required</p>
+                    <p class="mb-0 small">Enhanced Security - OTP Required</p>
                 </div>
                 <div class="card-body p-4">
                     <div class="alert alert-danger">
@@ -32,17 +32,6 @@
                             </div>
                             {% if form.email.errors %}
                                 <div class="text-danger small">{{ form.email.errors[0] }}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.phone.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                {{ form.phone(class="form-control", placeholder="+91 9703065484") }}
-                            </div>
-                            {% if form.phone.errors %}
-                                <div class="text-danger small">{{ form.phone.errors[0] }}</div>
                             {% endif %}
                         </div>
 

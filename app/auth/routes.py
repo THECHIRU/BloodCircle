@@ -305,10 +305,6 @@ def admin_login():
             return redirect(url_for('auth.admin_login'))
         
         if user and user.role == 'admin':
-            if user.phone != form.phone.data:
-                flash('Invalid credentials. Both email and phone must match.', 'danger')
-                return redirect(url_for('auth.admin_login'))
-            
             if not user.check_password(form.password.data):
                 flash('Invalid credentials.', 'danger')
                 return redirect(url_for('auth.admin_login'))

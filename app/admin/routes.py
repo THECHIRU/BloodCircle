@@ -105,10 +105,10 @@ def manage_users():
         query = query.filter_by(is_verified=False)
     
     if search_query:
-        query = query.filter(
-            (User.email.ilike(f'%{search_query}%')) |
-            (User.phone.ilike(f'%{search_query}%'))
-        )
+        search_filters = [User.email.ilike(f'%{search_query}%')]
+        # Only search phone if it's not null
+        search_filters.append(User.phone.ilike(f'%{search_query}%'))
+        query = query.filter(db.or_(*search_filters))
     
     # Order by creation date (newest first)
     query = query.order_by(User.created_at.desc())
