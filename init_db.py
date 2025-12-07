@@ -23,48 +23,65 @@ def init_database():
     
     with app.app_context():
         try:
-            # CRITICAL FIX: Drop and recreate users table to remove old constraints
+            # CRITICAL FIX: Make phone column nullable
             inspector = inspect(db.engine)
             
             if 'users' in inspector.get_table_names():
-                print("\n⚠️  Users table exists with old schema, attempting to clean...")
+                print("\n⚠️  Users table exists, checking schema...")
                 
                 with db.engine.begin() as conn:
-                    # Drop all constraints on phone column
-                    try:
-                        # Get all constraints
-                        result = conn.execute(text("""
-                            SELECT constraint_name 
-                            FROM information_schema.table_constraints 
-                            WHERE table_name='users' 
-                            AND constraint_name LIKE '%phone%'
-                        """))
-                        for (constraint,) in result.fetchall():
-                            conn.execute(text(f'ALTER TABLE users DROP CONSTRAINT IF EXISTS "{constraint}" CASCADE'))
-                            print(f"   ✓ Dropped: {constraint}")
-                    except Exception as e:
-                        print(f"   Note: {e}")
+                    # Get current phone column info
+                    columns = inspector.get_columns('users')
+                    phone_col = next((col for col in columns if col['name'] == 'phone'), None)
                     
-                    # Drop all indexes on phone column
-                    try:
-                        result = conn.execute(text("""
-                            SELECT indexname 
-                            FROM pg_indexes 
-                            WHERE tablename='users' AND indexname LIKE '%phone%'
-                        """))
-                        for (idx,) in result.fetchall():
-                            conn.execute(text(f'DROP INDEX IF EXISTS "{idx}" CASCADE'))
-                            print(f"   ✓ Dropped index: {idx}")
-                    except Exception as e:
-                        print(f"   Note: {e}")
-                    
-                    # Make phone nullable
-                    try:
-                        conn.execute(text('ALTER TABLE users ALTER COLUMN phone SET DATA TYPE VARCHAR(20)'))
-                        conn.execute(text('ALTER TABLE users ALTER COLUMN phone DROP NOT NULL'))
-                        print("   ✓ Phone column cleaned")
-                    except Exception as e:
-                        print(f"   Note: {e}")
+                    if phone_col:
+                        print(f"   Phone column: nullable={phone_col['nullable']}")
+                        
+                        if not phone_col['nullable']:
+                            print("   ⚠️  Phone is NOT nullable! Fixing...")
+                            
+                            # Drop all constraints on phone first
+                            try:
+                                result = conn.execute(text("""
+                                    SELECT constraint_name 
+                                    FROM information_schema.table_constraints 
+                                    WHERE table_name='users' 
+                                    AND constraint_name LIKE '%phone%'
+                                """))
+                                for (constraint,) in result.fetchall():
+                                    try:
+                                        conn.execute(text(f'ALTER TABLE users DROP CONSTRAINT "{constraint}" CASCADE'))
+                                        print(f"     ✓ Dropped constraint: {constraint}")
+                                    except:
+                                        pass
+                            except:
+                                pass
+                            
+                            # Drop all indexes on phone
+                            try:
+                                result = conn.execute(text("""
+                                    SELECT indexname 
+                                    FROM pg_indexes 
+                                    WHERE tablename='users' AND indexname LIKE '%phone%'
+                                """))
+                                for (idx,) in result.fetchall():
+                                    try:
+                                        conn.execute(text(f'DROP INDEX IF EXISTS "{idx}" CASCADE'))
+                                        print(f"     ✓ Dropped index: {idx}")
+                                    except:
+                                        pass
+                            except:
+                                pass
+                            
+                            # NOW make it nullable
+                            try:
+                                # First set to nullable
+                                conn.execute(text('ALTER TABLE users ALTER COLUMN phone DROP NOT NULL'))
+                                print("     ✓ Made phone column nullable")
+                            except Exception as e:
+                                print(f"     ⚠️  Error making nullable: {e}")
+                    else:
+                        print("   Phone column not found in users table")
             
             # Create or update all tables
             print("\nCreating/updating database tables...")
