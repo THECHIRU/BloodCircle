@@ -66,6 +66,28 @@ def create_app(config_name='default'):
     # Register template filters
     register_template_filters(app)
     
+    # Initialize database and create tables on startup
+    with app.app_context():
+        try:
+            db.create_all()
+            
+            # Create admin if doesn't exist
+            from app.models import User
+            admin_email = 'chiranjeevi.kola@zohomail.in'
+            if not User.query.filter_by(email=admin_email).first():
+                admin = User(
+                    email=admin_email,
+                    phone=None,
+                    role='admin',
+                    is_verified=True,
+                    is_active=True
+                )
+                admin.set_password('g0abdkbxa6')
+                db.session.add(admin)
+                db.session.commit()
+        except Exception as e:
+            print(f"Note: Database initialization during startup: {e}")
+    
     return app
 
 
