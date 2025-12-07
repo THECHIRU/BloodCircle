@@ -27,7 +27,7 @@ def register():
         # Don't assign role yet - let user choose
         user = User(
             email=form.email.data.lower(),
-            phone=form.phone.data if form.phone.data else None,  # Optional phone
+            phone=None,  # No phone collected during registration
             role=None,  # No role assigned yet - user will choose
             is_verified=True,  # Auto-verified, no OTP needed
             is_active=True
