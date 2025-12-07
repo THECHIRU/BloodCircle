@@ -19,15 +19,14 @@ class User(UserMixin, db.Model):
     Supports three roles: admin, donor, patient
     """
     __tablename__ = 'users'
-    __table_args__ = (
-        db.Index('ix_users_phone_partial', 'phone', postgresql_where=db.text('phone IS NOT NULL')),
-    )
     
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    phone = db.Column(db.String(20), nullable=True, index=False, unique=False)  # No unique, no index
+    phone = db.Column(db.String(20), nullable=True)  # NO unique constraint, nullable
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=True)  # admin, donor, patient - nullable until user selects
+    is_verified = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
     is_verified = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     deleted_at = db.Column(db.DateTime, nullable=True)
