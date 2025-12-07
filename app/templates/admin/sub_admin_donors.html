@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Donors - Sub-Admin - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-hand-holding-heart me-2"></i>All Donors - Complete Details (View Only)</h2>
+        <div>
+            <a href="{{ url_for('admin.sub_admin_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>View Only Mode:</strong> You can view all donor information including personal details, medical history, and donation records but cannot perform any modifications.
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Blood Group</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Location</th>
+                            <th>Available</th>
+                            <th>Last Donation</th>
+                            <th>Joined</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for donor in donors %}
+                        <tr>
+                            <td>{{ donor.id }}</td>
+                            <td>{{ donor.full_name }}</td>
+                            <td>{{ donor.email }}</td>
+                            <td>{{ donor.phone }}</td>
+                            <td>
+                                <span class="badge bg-danger fs-6">{{ donor.blood_group }}</span>
+                            </td>
+                            <td>{{ donor.get_age() }} yrs</td>
+                            <td>{{ donor.gender }}</td>
+                            <td>
+                                {{ donor.city }}, {{ donor.state }}
+                            </td>
+                            <td>
+                                {% if donor.is_available %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="fas fa-times"></i> No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if donor.last_donation_date %}
+                                    {{ donor.last_donation_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ donor.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#donorModal{{ donor.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Donor Details Modal -->
+                        <div class="modal fade" id="donorModal{{ donor.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-hand-holding-heart me-2"></i>Complete Donor Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h6 class="text-success border-bottom pb-2 mb-3">Personal Information</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>Donor ID:</strong> {{ donor.id }}</p>
+                                                <p><strong>User ID:</strong> {{ donor.user_id }}</p>
+                                                <p><strong>Full Name:</strong> {{ donor.full_name }}</p>
+                                                <p><strong>Email:</strong> {{ donor.email }}</p>
+                                                <p><strong>Phone:</strong> {{ donor.phone }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Blood Group:</strong> <span class="badge bg-danger fs-5">{{ donor.blood_group }}</span></p>
+                                                <p><strong>Date of Birth:</strong> {{ donor.date_of_birth.strftime('%Y-%m-%d') }}</p>
+                                                <p><strong>Age:</strong> {{ donor.get_age() }} years</p>
+                                                <p><strong>Gender:</strong> {{ donor.gender }}</p>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="text-success border-bottom pb-2 mb-3 mt-4">Address Details</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-12">
+                                                <p><strong>Complete Address:</strong></p>
+                                                <div class="bg-light p-3 rounded">
+                                                    {{ donor.address }}<br>
+                                                    {{ donor.city }}, {{ donor.state }} - {{ donor.pincode }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="text-success border-bottom pb-2 mb-3 mt-4">Donation Information</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>Currently Available:</strong> 
+                                                    {% if donor.is_available %}
+                                                        <span class="badge bg-success fs-6">Yes, Ready to Donate</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary fs-6">Not Available</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Last Donation Date:</strong> 
+                                                    {% if donor.last_donation_date %}
+                                                        {{ donor.last_donation_date.strftime('%Y-%m-%d') }}
+                                                        <br><small class="text-muted">({{ ((donor.created_at.date() - donor.last_donation_date)|string).split()[0] }} days ago)</small>
+                                                    {% else %}
+                                                        <span class="text-muted">Never donated</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Account Status:</strong> 
+                                                    {% if donor.user.is_blocked %}
+                                                        <span class="badge bg-danger">Blocked</span>
+                                                    {% elif donor.user.deleted_at %}
+                                                        <span class="badge bg-secondary">Deleted</span>
+                                                    {% elif donor.user.is_active %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Inactive</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Email Verified:</strong> 
+                                                    {% if donor.user.is_verified %}
+                                                        <span class="badge bg-success">Yes</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">No</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {% if donor.medical_history %}
+                                        <h6 class="text-success border-bottom pb-2 mb-3 mt-4">Medical History</h6>
+                                        <div class="bg-light p-3 rounded">
+                                            {{ donor.medical_history }}
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-info mt-3">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            No medical history provided.
+                                        </div>
+                                        {% endif %}
+
+                                        <h6 class="text-success border-bottom pb-2 mb-3 mt-4">Registration Details</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Registered On:</strong> {{ donor.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Last Updated:</strong> {{ donor.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if donors|length == 0 %}
+            <div class="text-center py-4">
+                <i class="fas fa-hand-holding-heart fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No donors found</p>
+            </div>
+            {% else %}
+            <div class="mt-3">
+                <p class="text-muted">
+                    Total: <strong>{{ donors|length }}</strong> donors | 
+                    Available: <strong>{{ donors|selectattr('is_available')|list|length }}</strong>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Blood Group Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Donors by Blood Group</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        {% for group in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="border rounded p-3 {% if donors|selectattr('blood_group', 'equalto', group)|list|length > 0 %}bg-success bg-opacity-10{% endif %}">
+                                <h3 class="text-danger mb-1">{{ group }}</h3>
+                                <p class="text-muted mb-1">
+                                    <strong>{{ donors|selectattr('blood_group', 'equalto', group)|list|length }}</strong> donors
+                                </p>
+                                <small class="text-success">
+                                    {{ donors|selectattr('blood_group', 'equalto', group)|selectattr('is_available')|list|length }} available
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Feedback - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-comments"></i> Manage Feedback</h2>
+    
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">All Feedback</h5>
+        </div>
+        <div class="card-body">
+            {% for feedback in feedbacks %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ feedback.name }}</strong>
+                            <small class="text-muted">({{ feedback.email }})</small>
+                        </div>
+                        <small class="text-muted">{{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p><strong>Subject:</strong> {{ feedback.subject }}</p>
+                    <p><strong>Message:</strong><br>{{ feedback.message }}</p>
+                    
+                    {% if feedback.response %}
+                        <div class="alert alert-success">
+                            <strong>Admin Response:</strong><br>
+                            {{ feedback.response }}<br>
+                            <small class="text-muted">Responded at: {{ feedback.responded_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('admin.respond_feedback', feedback_id=feedback.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <div class="mb-3">
+                                <label for="response" class="form-label">Admin Response</label>
+                                <textarea name="response" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-reply"></i> Send Response
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <form method="POST" action="{{ url_for('admin.delete_feedback', feedback_id=feedback.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this feedback?')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not feedbacks %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No feedback available.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

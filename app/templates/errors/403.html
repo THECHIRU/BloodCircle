@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <i class="fas fa-ban fa-5x text-danger"></i>
+        <h1 class="display-1 fw-bold mt-4">403</h1>
+        <h2 class="mb-4">Access Forbidden</h2>
+        <p class="lead text-muted mb-4">
+            You don't have permission to access this page.
+        </p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-danger btn-lg">
+            <i class="fas fa-home me-2"></i>Go to Homepage
+        </a>
+    </div>
+</div>
+{% endblock %}

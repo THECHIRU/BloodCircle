@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Users - Sub-Admin - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users me-2"></i>All Users - Complete Details (View Only)</h2>
+        <div>
+            <a href="{{ url_for('admin.sub_admin_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>View Only Mode:</strong> You can view all user information including complete profile details but cannot perform any modifications.
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Full Name</th>
+                            <th>Blood Group</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Verified</th>
+                            <th>Last Login</th>
+                            <th>Joined</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.phone }}</td>
+                            <td>
+                                <span class="badge bg-{% if user.role == 'admin' %}danger{% elif user.role == 'sub_admin' %}warning{% elif user.role == 'donor' %}success{% else %}primary{% endif %}">
+                                    {{ user.role|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.donor %}
+                                    {{ user.donor.full_name }}
+                                {% elif user.patient %}
+                                    {{ user.patient.full_name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.donor %}
+                                    <span class="badge bg-danger fs-6">{{ user.donor.blood_group }}</span>
+                                {% elif user.patient %}
+                                    <span class="badge bg-warning fs-6">{{ user.patient.blood_group_required }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.donor %}
+                                    {{ user.donor.city }}, {{ user.donor.state }}
+                                {% elif user.patient %}
+                                    {{ user.patient.city }}, {{ user.patient.state }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_blocked %}
+                                    <span class="badge bg-danger">Blocked</span>
+                                {% elif user.deleted_at %}
+                                    <span class="badge bg-secondary">Deleted</span>
+                                {% elif user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_verified %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Yes</span>
+                                {% else %}
+                                    <span class="badge bg-warning"><i class="fas fa-times"></i> No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.last_login %}
+                                    {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#userModal{{ user.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- User Details Modal -->
+                        <div class="modal fade" id="userModal{{ user.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-user-circle me-2"></i>Complete User Details
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h6 class="text-primary border-bottom pb-2 mb-3">Account Information</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p><strong>User ID:</strong> {{ user.id }}</p>
+                                                <p><strong>Email:</strong> {{ user.email }}</p>
+                                                <p><strong>Phone:</strong> {{ user.phone }}</p>
+                                                <p><strong>Role:</strong> 
+                                                    <span class="badge bg-{% if user.role == 'admin' %}danger{% elif user.role == 'sub_admin' %}warning{% elif user.role == 'donor' %}success{% else %}primary{% endif %}">
+                                                        {{ user.role|title }}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Status:</strong> 
+                                                    {% if user.is_blocked %}
+                                                        <span class="badge bg-danger">Blocked</span>
+                                                    {% elif user.deleted_at %}
+                                                        <span class="badge bg-secondary">Deleted on {{ user.deleted_at.strftime('%Y-%m-%d') }}</span>
+                                                    {% elif user.is_active %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Inactive</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Verified:</strong> 
+                                                    {% if user.is_verified %}
+                                                        <span class="badge bg-success">Yes</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">No</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Joined:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                <p><strong>Last Login:</strong> 
+                                                    {% if user.last_login %}
+                                                        {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                                    {% else %}
+                                                        Never
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {% if user.donor %}
+                                        <h6 class="text-success border-bottom pb-2 mb-3 mt-4">Donor Profile</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Full Name:</strong> {{ user.donor.full_name }}</p>
+                                                <p><strong>Blood Group:</strong> <span class="badge bg-danger fs-6">{{ user.donor.blood_group }}</span></p>
+                                                <p><strong>Date of Birth:</strong> {{ user.donor.date_of_birth.strftime('%Y-%m-%d') }}</p>
+                                                <p><strong>Age:</strong> {{ user.donor.get_age() }} years</p>
+                                                <p><strong>Gender:</strong> {{ user.donor.gender }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Address:</strong> {{ user.donor.address }}</p>
+                                                <p><strong>City:</strong> {{ user.donor.city }}</p>
+                                                <p><strong>State:</strong> {{ user.donor.state }}</p>
+                                                <p><strong>Pincode:</strong> {{ user.donor.pincode }}</p>
+                                                <p><strong>Available:</strong> 
+                                                    {% if user.donor.is_available %}
+                                                        <span class="badge bg-success">Yes</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">No</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                <p><strong>Last Donation:</strong> 
+                                                    {% if user.donor.last_donation_date %}
+                                                        {{ user.donor.last_donation_date.strftime('%Y-%m-%d') }}
+                                                    {% else %}
+                                                        Never donated
+                                                    {% endif %}
+                                                </p>
+                                                {% if user.donor.medical_history %}
+                                                <p><strong>Medical History:</strong></p>
+                                                <div class="bg-light p-2 rounded">{{ user.donor.medical_history }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if user.patient %}
+                                        <h6 class="text-primary border-bottom pb-2 mb-3 mt-4">Patient Profile</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Full Name:</strong> {{ user.patient.full_name }}</p>
+                                                <p><strong>Blood Group Required:</strong> <span class="badge bg-danger fs-6">{{ user.patient.blood_group_required }}</span></p>
+                                                <p><strong>Hospital:</strong> {{ user.patient.hospital_name }}</p>
+                                                <p><strong>Location:</strong> {{ user.patient.location }}</p>
+                                                <p><strong>City:</strong> {{ user.patient.city }}</p>
+                                                <p><strong>State:</strong> {{ user.patient.state }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Urgency:</strong> 
+                                                    {% if user.patient.urgency_level == 'Critical' %}
+                                                        <span class="badge bg-danger">Critical</span>
+                                                    {% elif user.patient.urgency_level == 'Urgent' %}
+                                                        <span class="badge bg-warning">Urgent</span>
+                                                    {% else %}
+                                                        <span class="badge bg-info">Normal</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Required By:</strong> {{ user.patient.required_by_date.strftime('%Y-%m-%d') }}</p>
+                                                <p><strong>Days Remaining:</strong> {{ user.patient.days_remaining() }} days</p>
+                                                <p><strong>Request Fulfilled:</strong> 
+                                                    {% if user.patient.is_fulfilled %}
+                                                        <span class="badge bg-success">Yes</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">No</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                {% if user.patient.medical_condition %}
+                                                <p><strong>Medical Condition:</strong></p>
+                                                <div class="bg-light p-2 rounded">{{ user.patient.medical_condition }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if not user.donor and not user.patient %}
+                                        <div class="alert alert-warning mt-3">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            This is an administrative account with no donor or patient profile.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if users|length == 0 %}
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No users found</p>
+            </div>
+            {% else %}
+            <div class="mt-3">
+                <p class="text-muted">
+                    Total: <strong>{{ users|length }}</strong> users | 
+                    Active: <strong>{{ users|selectattr('is_active')|list|length }}</strong> | 
+                    Verified: <strong>{{ users|selectattr('is_verified')|list|length }}</strong>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

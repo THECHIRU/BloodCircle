@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-danger">Delete Account</h6>
+                    <p class="text-muted">Once you delete your account, you will have 30 days to recover it. After 30 days, your account will be permanently deleted.</p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold">Are you sure you want to delete your account?</p>
+                <ul>
+                    <li>Your account will be deactivated immediately</li>
+                    <li>You can recover it within 30 days by logging in</li>
+                    <li>After 30 days, your account will be permanently deleted</li>
+                    <li>All your patient records will be lost after 30 days</li>
+                </ul>
+                <p class="text-danger"><strong>This action cannot be undone after 30 days!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('auth.delete_account') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% block title %}My Profile - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <div class="profile-avatar mb-3">
+                        <i class="fas fa-user-circle fa-6x text-primary"></i>
+                    </div>
+                    <h4>{{ patient.full_name }}</h4>
+                    <p class="text-muted">{{ current_user.email }}</p>
+                    <p class="text-muted"><i class="fas fa-phone"></i> {{ current_user.phone }}</p>
+                    
+                    <div class="mt-3">
+                        {% if not patient.is_fulfilled %}
+                            <span class="badge bg-danger fs-6"><i class="fas fa-exclamation-circle"></i> Blood Required</span>
+                        {% else %}
+                            <span class="badge bg-success fs-6"><i class="fas fa-check-circle"></i> Request Fulfilled</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-tint"></i> Blood Group Needed:</strong>
+                            <p class="text-danger fs-4 mb-0">{{ patient.blood_group_required }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-hospital"></i> Hospital:</strong>
+                            <p>{{ patient.hospital_name }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Urgency Level:</strong>
+                            <p>
+                                {% if patient.urgency_level == 'Critical' %}
+                                    <span class="badge bg-danger">{{ patient.urgency_level }}</span>
+                                {% elif patient.urgency_level == 'Urgent' %}
+                                    <span class="badge bg-warning text-dark">{{ patient.urgency_level }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ patient.urgency_level }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-calendar-alt"></i> Required By Date:</strong>
+                            <p>{{ patient.required_by_date.strftime('%B %d, %Y') }}</p>
+                            {% if days_remaining >= 0 %}
+                                <small class="text-muted">{{ days_remaining }} days remaining</small>
+                            {% else %}
+                                <small class="text-danger">Past due date</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
+                            <p>{{ patient.location }}<br>{{ patient.city }}, {{ patient.state }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if patient.medical_condition %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong><i class="fas fa-notes-medical"></i> Medical Condition:</strong>
+                            <p>{{ patient.medical_condition }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <strong><i class="fas fa-clock"></i> Member Since:</strong>
+                            <p>{{ patient.created_at.strftime('%B %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if not patient.is_fulfilled %}
+            <div class="card shadow mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-search"></i> Find Compatible Donors</h5>
+                </div>
+                <div class="card-body">
+                    <p>You are looking for blood group <strong class="text-danger">{{ patient.blood_group_required }}</strong></p>
+                    <p>Compatible blood groups that can donate to you:</p>
+                    <div class="compatible-groups mb-3">
+                        {% for group in compatible_groups %}
+                            <span class="badge bg-danger me-2 mb-2 fs-6">{{ group }}</span>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ url_for('patient.search_donors') }}" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search for Donors
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-danger">Delete Account</h6>
+                    <p class="text-muted">Once you delete your account, you will have 30 days to recover it. After 30 days, your account will be permanently deleted.</p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold">Are you sure you want to delete your account?</p>
+                <ul>
+                    <li>Your account will be deactivated immediately</li>
+                    <li>You can recover it within 30 days by logging in</li>
+                    <li>After 30 days, your account will be permanently deleted</li>
+                    <li>All your patient records will be lost after 30 days</li>
+                </ul>
+                <p class="text-danger"><strong>This action cannot be undone after 30 days!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('auth.delete_account') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

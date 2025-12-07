@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center fw-bold mb-4">
+                        <i class="fas fa-user-plus text-danger me-2"></i>Donor Registration
+                    </h2>
+                    <p class="text-center text-muted mb-4">Complete your profile to start saving lives</p>
+                    
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.full_name.label(class="form-label") }}
+                                {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                                {% if form.full_name.errors %}
+                                    <div class="invalid-feedback">{{ form.full_name.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.blood_group.label(class="form-label") }}
+                                {{ form.blood_group(class="form-select" + (" is-invalid" if form.blood_group.errors else "")) }}
+                                {% if form.blood_group.errors %}
+                                    <div class="invalid-feedback">{{ form.blood_group.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.date_of_birth.label(class="form-label") }}
+                                {{ form.date_of_birth(class="form-control" + (" is-invalid" if form.date_of_birth.errors else "")) }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="invalid-feedback">{{ form.date_of_birth.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.gender.label(class="form-label") }}
+                                {{ form.gender(class="form-select" + (" is-invalid" if form.gender.errors else "")) }}
+                                {% if form.gender.errors %}
+                                    <div class="invalid-feedback">{{ form.gender.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.address.label(class="form-label") }}
+                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else "")) }}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback">{{ form.address.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.city.label(class="form-label") }}
+                                {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
+                                {% if form.city.errors %}
+                                    <div class="invalid-feedback">{{ form.city.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.state.label(class="form-label") }}
+                                {{ form.state(class="form-control" + (" is-invalid" if form.state.errors else "")) }}
+                                {% if form.state.errors %}
+                                    <div class="invalid-feedback">{{ form.state.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.pincode.label(class="form-label") }}
+                                {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else "")) }}
+                                {% if form.pincode.errors %}
+                                    <div class="invalid-feedback">{{ form.pincode.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.last_donation_date.label(class="form-label") }}
+                            {{ form.last_donation_date(class="form-control" + (" is-invalid" if form.last_donation_date.errors else "")) }}
+                            {% if form.last_donation_date.errors %}
+                                <div class="invalid-feedback">{{ form.last_donation_date.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.medical_history.label(class="form-label") }}
+                            {{ form.medical_history(class="form-control" + (" is-invalid" if form.medical_history.errors else ""), rows=3) }}
+                            {% if form.medical_history.errors %}
+                                <div class="invalid-feedback">{{ form.medical_history.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4 form-check">
+                            {{ form.is_available(class="form-check-input") }}
+                            {{ form.is_available.label(class="form-check-label") }}
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-danger btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

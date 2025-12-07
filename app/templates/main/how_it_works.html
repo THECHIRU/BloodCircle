@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}How It Works - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-5">How It Works</h1>
+    
+    <div class="row mb-5">
+        <div class="col-md-4 text-center mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-user-plus fa-4x text-danger"></i>
+                    </div>
+                    <h3>1. Register</h3>
+                    <p>Create an account and choose your role - Donor or Patient. Complete your profile with necessary details.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 text-center mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-4x text-primary"></i>
+                    </div>
+                    <h3>2. Search</h3>
+                    <p>Patients can search for compatible blood donors based on blood group and location.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 text-center mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <i class="fas fa-handshake fa-4x text-success"></i>
+                    </div>
+                    <h3>3. Connect</h3>
+                    <p>Connect with donors directly through provided contact information and arrange donation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-hand-holding-heart"></i> For Donors</h4>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li class="mb-3">Register as a donor and complete your profile</li>
+                        <li class="mb-3">Keep your availability status updated</li>
+                        <li class="mb-3">Receive notifications when patients need your blood type</li>
+                        <li class="mb-3">Connect with patients and schedule donations</li>
+                        <li>Help save lives in your community!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-hospital-user"></i> For Patients</h4>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li class="mb-3">Register as a patient and provide required details</li>
+                        <li class="mb-3">Search for compatible blood donors in your area</li>
+                        <li class="mb-3">View donor profiles and availability</li>
+                        <li class="mb-3">Contact donors directly through phone or email</li>
+                        <li>Get the blood you need quickly and efficiently!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow mt-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h4>
+        </div>
+        <div class="card-body">
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            Is the service free?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! Our BloodCircle is completely free for both donors and patients.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            How do I update my availability?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Log in to your donor dashboard and toggle your availability status anytime.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            Is my information secure?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes, we use industry-standard security measures to protect your personal information.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

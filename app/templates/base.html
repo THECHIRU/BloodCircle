@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BloodCircle - Connecting donors with patients in need">
+    <meta name="keywords" content="blood donation, blood donor, blood bank, save lives">
+        <title>{% block title %}BloodCircle{% endblock %}</title>    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">
+                <i class="fas fa-heartbeat me-2"></i>BloodCircle
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.about') }}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.blood_compatibility') }}">Blood Info</a>
+                    </li>
+                    
+                    {% if current_user.is_authenticated %}
+                        <!-- Authenticated User Menu -->
+                        {% if current_user.role == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Admin Dashboard
+                                </a>
+                            </li>
+                        {% elif current_user.role == 'donor' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('donor.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                        {% elif current_user.role == 'patient' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.search_donors') }}">
+                                    <i class="fas fa-search me-1"></i>Find Donors
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>{{ current_user.email }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if current_user.role == 'donor' %}
+                                    <li><a class="dropdown-item" href="{{ url_for('donor.profile') }}">
+                                        <i class="fas fa-user me-2"></i>My Profile
+                                    </a></li>
+                                {% elif current_user.role == 'patient' %}
+                                    <li><a class="dropdown-item" href="{{ url_for('patient.profile') }}">
+                                        <i class="fas fa-user me-2"></i>My Profile
+                                    </a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- Guest User Menu -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-light ms-2" href="{{ url_for('auth.register') }}">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {% if category == 'success' %}
+                            <i class="fas fa-check-circle me-2"></i>
+                        {% elif category == 'danger' %}
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                        {% elif category == 'warning' %}
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="text-danger fw-bold mb-3">
+                        <i class="fas fa-heartbeat me-2"></i>BloodCircle
+                    </h5>
+                    <p class="text-muted">
+                        Connecting blood donors with patients in need. Save lives through the gift of blood donation.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#" class="text-light me-3"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-light me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-light"><i class="fab fa-linkedin fa-lg"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <h5 class="text-danger fw-bold mb-3">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{{ url_for('main.about') }}" class="text-light text-decoration-none hover-danger">
+                            <i class="fas fa-angle-right me-2"></i>About Us
+                        </a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.how_it_works') }}" class="text-light text-decoration-none hover-danger">
+                            <i class="fas fa-angle-right me-2"></i>How It Works
+                        </a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.faq') }}" class="text-light text-decoration-none hover-danger">
+                            <i class="fas fa-angle-right me-2"></i>FAQ
+                        </a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.blood_compatibility') }}" class="text-light text-decoration-none hover-danger">
+                            <i class="fas fa-angle-right me-2"></i>Blood Compatibility
+                        </a></li>
+                        <li class="mb-2"><a href="{{ url_for('main.privacy_policy') }}" class="text-light text-decoration-none hover-danger">
+                            <i class="fas fa-angle-right me-2"></i>Privacy Policy
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <h5 class="text-danger fw-bold mb-3">Contact & Feedback</h5>
+                    <ul class="list-unstyled text-light">
+                        <li class="mb-2">
+                            <i class="fas fa-envelope me-2"></i><a href="mailto:chiranjeevi.kola@zohomail.in" class="text-light text-decoration-none hover-danger">chiranjeevi.kola@zohomail.in</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-phone me-2"></i><a href="tel:+919703065484" class="text-light text-decoration-none hover-danger">+91 9703065484</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-map-marker-alt me-2"></i>Repalle, Andhra Pradesh, India
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('main.feedback') }}" class="btn btn-danger btn-sm mt-2">
+                        <i class="fas fa-comment me-2"></i>Send Feedback
+                    </a>
+                </div>
+            </div>
+            
+            <hr class="border-secondary my-4">
+            
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="text-muted mb-0">
+                        &copy; {{ current_year or 2025 }} BloodCircle. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="{{ url_for('main.terms_of_service') }}" class="text-muted text-decoration-none me-3">Terms of Service</a>
+                    <a href="{{ url_for('main.privacy_policy') }}" class="text-light text-decoration-none hover-danger">Privacy Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+        <div class="spinner-border text-danger" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</body>
+</html>

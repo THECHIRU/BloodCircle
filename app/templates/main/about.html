@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="text-center fw-bold mb-5">About BloodCircle</h1>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="text-danger fw-bold mb-3">Our Mission</h3>
+                    <p class="lead">
+                        To bridge the gap between blood donors and patients in need through a modern, 
+                        efficient, and secure platform that saves lives.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="text-danger fw-bold mb-3">What We Do</h3>
+                    <p>
+                        BloodCircle is a comprehensive web application that connects real-world 
+                        blood donors with patients in urgent need. Our platform makes it easy to:
+                    </p>
+                    <ul>
+                        <li>Register as a blood donor and maintain your donation history</li>
+                        <li>Search for compatible blood donors based on blood type and location</li>
+                        <li>Manage blood donation requests with urgency levels</li>
+                        <li>Verify accounts securely with OTP authentication</li>
+                        <li>Track availability and donation eligibility</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="text-danger fw-bold mb-3">Why Blood Donation Matters</h3>
+                    <p>
+                        Every two seconds, someone in the world needs blood. Blood donation is a simple 
+                        act that can save up to three lives with just one donation. Our platform ensures 
+                        that donors and patients can connect quickly and efficiently, especially in 
+                        critical situations.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row text-center mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-danger">
+                        <div class="card-body">
+                            <i class="fas fa-shield-alt fa-3x text-danger mb-3"></i>
+                            <h5 class="fw-bold">Secure</h5>
+                            <p class="text-muted">Industry-standard security with OTP verification</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-danger">
+                        <div class="card-body">
+                            <i class="fas fa-bolt fa-3x text-danger mb-3"></i>
+                            <h5 class="fw-bold">Fast</h5>
+                            <p class="text-muted">Quick search and instant donor matching</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-danger">
+                        <div class="card-body">
+                            <i class="fas fa-mobile-alt fa-3x text-danger mb-3"></i>
+                            <h5 class="fw-bold">Accessible</h5>
+                            <p class="text-muted">Mobile-friendly and easy to use</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-danger btn-lg">
+                    <i class="fas fa-heart me-2"></i>Join Our Community
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

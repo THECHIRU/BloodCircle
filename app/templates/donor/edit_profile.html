@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-edit"></i> Edit Donor Profile</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('donor.edit_profile') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">{{ form.full_name.label }}</label>
+                            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                            {% if form.full_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.full_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="address" class="form-label">{{ form.address.label }}</label>
+                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else "")) }}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.address.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">{{ form.city.label }}</label>
+                                {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
+                                {% if form.city.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="state" class="form-label">{{ form.state.label }}</label>
+                                {{ form.state(class="form-control" + (" is-invalid" if form.state.errors else "")) }}
+                                {% if form.state.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.state.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="pincode" class="form-label">{{ form.pincode.label }}</label>
+                            {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else "")) }}
+                            {% if form.pincode.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.pincode.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="last_donation_date" class="form-label">{{ form.last_donation_date.label }}</label>
+                            {{ form.last_donation_date(class="form-control" + (" is-invalid" if form.last_donation_date.errors else "")) }}
+                            {% if form.last_donation_date.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.last_donation_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Leave blank if you haven't donated before</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="medical_history" class="form-label">{{ form.medical_history.label }}</label>
+                            {{ form.medical_history(class="form-control" + (" is-invalid" if form.medical_history.errors else ""), rows=3) }}
+                            {% if form.medical_history.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.medical_history.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">List any medical conditions or medications</small>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.is_available(class="form-check-input" + (" is-invalid" if form.is_available.errors else "")) }}
+                            <label for="is_available" class="form-check-label">{{ form.is_available.label }}</label>
+                            {% if form.is_available.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.is_available.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-danger btn-lg") }}
+                            <a href="{{ url_for('donor.dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

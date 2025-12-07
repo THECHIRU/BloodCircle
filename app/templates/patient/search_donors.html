@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="mb-4"><i class="fas fa-search me-2"></i>Search Blood Donors</h1>
+    
+    <!-- Search Form -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('patient.search_donors') }}">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        {{ form.blood_group.label(class="form-label") }}
+                        {{ form.blood_group(class="form-select") }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ form.city.label(class="form-label") }}
+                        {{ form.city(class="form-control", placeholder="Enter city") }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ form.state.label(class="form-label") }}
+                        {{ form.state(class="form-control", placeholder="Enter state") }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+                <div class="form-check">
+                    {{ form.available_only(class="form-check-input", checked="checked") }}
+                    {{ form.available_only.label(class="form-check-label") }}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Compatible Blood Groups Info -->
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Compatible blood groups for {{ patient.blood_group_required }}:</strong>
+        {% for bg in compatible_groups %}
+            <span class="badge bg-primary ms-1">{{ bg }}</span>
+        {% endfor %}
+    </div>
+    
+    <!-- Search Results -->
+    {% if donors %}
+        <h4 class="mb-3">Found {{ pagination.total }} donor(s)</h4>
+        <div class="row">
+            {% for donor in donors %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">{{ donor.full_name }}</h5>
+                            {% if donor.is_available %}
+                                <span class="badge bg-success">Available</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Not Available</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="mb-2">
+                            <strong>Blood Group:</strong>
+                            <span class="badge bg-danger fs-6">{{ donor.blood_group }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Age:</strong> {{ donor.get_age() }} years
+                        </p>
+                        <p class="mb-2">
+                            <strong>Location:</strong> {{ donor.city }}, {{ donor.state }}
+                        </p>
+                        
+                        {% if donor.last_donation_date %}
+                            <p class="mb-2">
+                                <strong>Last Donation:</strong> {{ donor.last_donation_date|date }}
+                            </p>
+                        {% endif %}
+                        
+                        <div class="d-grid mt-3">
+                            <a href="{{ url_for('patient.view_donor', donor_id=donor.id) }}" 
+                               class="btn btn-outline-danger">
+                                <i class="fas fa-eye me-2"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('patient.search_donors', page=pagination.prev_num) }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('patient.search_donors', page=page_num) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('patient.search_donors', page=pagination.next_num) }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+            <h4>No donors found</h4>
+            <p>Try adjusting your search criteria or expanding your search area.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

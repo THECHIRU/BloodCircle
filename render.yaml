@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: blood-donation-network
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn run:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: blood-donation-db
+          property: connectionString
+      - key: MAIL_SERVER
+        sync: false
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USE_TLS
+        value: true
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: OTP_EXPIRY_MINUTES
+        value: 10
+      - key: MAX_OTP_REQUESTS_PER_HOUR
+        value: 3
+
+databases:
+  - name: blood-donation-db
+    databaseName: blood_donation
+    user: blood_donation_user

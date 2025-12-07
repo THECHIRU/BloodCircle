@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Details - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-user"></i> Donor Information</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <i class="fas fa-user-circle fa-5x text-danger mb-3"></i>
+                            <h3>{{ donor.first_name }} {{ donor.last_name }}</h3>
+                            {% if donor.is_available %}
+                                <span class="badge bg-success fs-5"><i class="fas fa-check-circle"></i> Available</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-5"><i class="fas fa-times-circle"></i> Not Available</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-tint text-danger"></i> Blood Group</h5>
+                            <p class="fs-2 text-danger fw-bold">{{ donor.blood_group }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-map-marker-alt text-primary"></i> Location</h5>
+                            <p>{{ donor.city }}, {{ donor.state }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-venus-mars"></i> Gender</h5>
+                            <p>{{ donor.gender }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-birthday-cake"></i> Age</h5>
+                            <p>{{ (now.year - donor.date_of_birth.year) }} years</p>
+                        </div>
+                    </div>
+                    
+                    {% if donor.last_donation_date %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h5><i class="fas fa-calendar-check"></i> Last Donation</h5>
+                            <p>{{ donor.last_donation_date.strftime('%B %d, %Y') }}</p>
+                            {% if donor.can_donate() %}
+                                <span class="badge bg-success">Eligible to donate</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Not eligible yet (needs to wait 90 days)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <h5 class="mb-3"><i class="fas fa-phone-alt"></i> Contact Information</h5>
+                    
+                    {% if donor.is_available and donor.can_donate() %}
+                        <div class="alert alert-success alert-permanent">
+                            <p class="mb-2"><strong>Email:</strong> {{ donor.user.email }}</p>
+                            <p class="mb-0"><strong>Phone:</strong> {{ donor.user.phone }}</p>
+                        </div>
+                        
+                        <div class="alert alert-info alert-permanent">
+                            <i class="fas fa-info-circle"></i> Please contact the donor directly to arrange blood donation. Be respectful and provide all necessary details about your requirement.
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> This donor is currently not available for donation or not eligible to donate at this time.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{{ url_for('patient.search_donors') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Search
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

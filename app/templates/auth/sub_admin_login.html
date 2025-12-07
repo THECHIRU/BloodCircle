@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Sub-Admin Login - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark text-center">
+                    <h3><i class="fas fa-user-shield me-2"></i>Sub-Admin Login</h3>
+                    <p class="mb-0 small">OTP Verification Required</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Two-Step Verification:</strong> Enter your credentials and choose OTP delivery method.
+                    </div>
+
+                    <form method="POST" action="{{ url_for('auth.sub_admin_login') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                {{ form.email(class="form-control", placeholder="subadmin@example.com") }}
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                {{ form.password(class="form-control", placeholder="Enter your password") }}
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="text-danger small">{{ form.password.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-key me-2"></i>OTP Delivery Method</label>
+                            <div class="border rounded p-3 bg-light">
+                                {% for subfield in form.otp_method %}
+                                    <div class="form-check mb-2">
+                                        {{ subfield(class="form-check-input") }}
+                                        {{ subfield.label(class="form-check-label") }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.otp_method.errors %}
+                                <div class="text-danger small">{{ form.otp_method.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            {{ form.remember_me(class="form-check-input") }}
+                            {{ form.remember_me.label(class="form-check-label") }}
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-warning btn-lg") }}
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-2">
+                            <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                                <i class="fas fa-arrow-left me-1"></i>Regular User Login
+                            </a>
+                        </p>
+                        <p class="mb-0">
+                            <a href="{{ url_for('auth.admin_login') }}" class="text-decoration-none">
+                                <i class="fas fa-shield-alt me-1"></i>Admin Login
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-success mt-3">
+                <i class="fas fa-bell me-2"></i>
+                Login notifications will be sent to both you and the main admin.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

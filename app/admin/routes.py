@@ -1,0 +1,504 @@
+"""
+Admin routes for dashboard, user management, and CRUD operations.
+"""
+from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask_login import login_required, current_user
+from datetime import datetime, timedelta
+from sqlalchemy import func
+from app import db
+from app.admin import admin_bp
+from app.models import User, Donor, Patient, Feedback
+from app.forms import AdminFeedbackResponseForm
+from app.utils import get_blood_group_statistics, send_notification_email
+from functools import wraps
+
+
+def admin_required(f):
+    """Decorator to ensure user is an admin."""
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            flash('Access denied. Admins only.', 'danger')
+            return redirect(url_for('main.index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@admin_bp.route('/dashboard')
+@admin_required
+def dashboard():
+    """Admin dashboard with statistics and overview."""
+    # Get statistics
+    stats = get_blood_group_statistics()
+    
+    # Recent users (last 7 days)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    recent_users = User.query.filter(User.created_at >= week_ago).count()
+    
+    # Total users by role
+    total_admins = User.query.filter_by(role='admin').count()
+    total_donors = User.query.filter_by(role='donor').count()
+    total_patients = User.query.filter_by(role='patient').count()
+    
+    # Pending feedback
+    pending_feedback = Feedback.query.filter_by(is_resolved=False).count()
+    
+    # Recent feedback
+    recent_feedback = Feedback.query.order_by(Feedback.created_at.desc()).limit(5).all()
+    
+    # Urgent patient requests
+    urgent_patients = Patient.query.filter(
+        Patient.urgency_level == 'Critical',
+        Patient.is_fulfilled == False
+    ).limit(5).all()
+    
+    # Blood group distribution data for charts
+    blood_groups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
+    donor_counts = []
+    patient_counts = []
+    
+    for bg in blood_groups:
+        donor_counts.append(stats['donor_distribution'].get(bg, 0))
+        patient_counts.append(stats['patient_requests'].get(bg, 0))
+    
+    return render_template(
+        'admin/dashboard.html',
+        stats=stats,
+        recent_users=recent_users,
+        total_admins=total_admins,
+        total_donors=total_donors,
+        total_patients=total_patients,
+        pending_feedback=pending_feedback,
+        recent_feedback=recent_feedback,
+        urgent_patients=urgent_patients,
+        blood_groups=blood_groups,
+        donor_counts=donor_counts,
+        patient_counts=patient_counts,
+        title='Admin Dashboard'
+    )
+
+
+@admin_bp.route('/users')
+@admin_required
+def manage_users():
+    """Manage all users."""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Filter options
+    role_filter = request.args.get('role', 'all')
+    status_filter = request.args.get('status', 'all')
+    search_query = request.args.get('search', '')
+    
+    query = User.query
+    
+    # Apply filters
+    if role_filter != 'all':
+        query = query.filter_by(role=role_filter)
+    
+    if status_filter == 'active':
+        query = query.filter_by(is_active=True)
+    elif status_filter == 'inactive':
+        query = query.filter_by(is_active=False)
+    elif status_filter == 'unverified':
+        query = query.filter_by(is_verified=False)
+    
+    if search_query:
+        query = query.filter(
+            (User.email.ilike(f'%{search_query}%')) |
+            (User.phone.ilike(f'%{search_query}%'))
+        )
+    
+    # Order by creation date (newest first)
+    query = query.order_by(User.created_at.desc())
+    
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    users = pagination.items
+    
+    return render_template(
+        'admin/manage_users.html',
+        users=users,
+        pagination=pagination,
+        role_filter=role_filter,
+        status_filter=status_filter,
+        search_query=search_query,
+        title='Manage Users'
+    )
+
+
+@admin_bp.route('/donors')
+@admin_required
+def manage_donors():
+    """Manage donors."""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Filter options
+    blood_group_filter = request.args.get('blood_group', 'all')
+    availability_filter = request.args.get('availability', 'all')
+    city_filter = request.args.get('city', '')
+    
+    query = Donor.query
+    
+    # Apply filters
+    if blood_group_filter != 'all':
+        query = query.filter_by(blood_group=blood_group_filter)
+    
+    if availability_filter == 'available':
+        query = query.filter_by(is_available=True)
+    elif availability_filter == 'unavailable':
+        query = query.filter_by(is_available=False)
+    
+    if city_filter:
+        query = query.filter(Donor.city.ilike(f'%{city_filter}%'))
+    
+    # Order by creation date (newest first)
+    query = query.order_by(Donor.created_at.desc())
+    
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    donors = pagination.items
+    
+    # Get unique cities for filter
+    cities = db.session.query(Donor.city).distinct().all()
+    cities = [city[0] for city in cities]
+    
+    return render_template(
+        'admin/manage_donors.html',
+        donors=donors,
+        pagination=pagination,
+        blood_group_filter=blood_group_filter,
+        availability_filter=availability_filter,
+        city_filter=city_filter,
+        cities=cities,
+        title='Manage Donors'
+    )
+
+
+@admin_bp.route('/patients')
+@admin_required
+def manage_patients():
+    """Manage patients."""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Filter options
+    blood_group_filter = request.args.get('blood_group', 'all')
+    urgency_filter = request.args.get('urgency', 'all')
+    fulfillment_filter = request.args.get('fulfillment', 'all')
+    
+    query = Patient.query
+    
+    # Apply filters
+    if blood_group_filter != 'all':
+        query = query.filter_by(blood_group_required=blood_group_filter)
+    
+    if urgency_filter != 'all':
+        query = query.filter_by(urgency_level=urgency_filter)
+    
+    if fulfillment_filter == 'fulfilled':
+        query = query.filter_by(is_fulfilled=True)
+    elif fulfillment_filter == 'pending':
+        query = query.filter_by(is_fulfilled=False)
+    
+    # Order by urgency and creation date
+    query = query.order_by(Patient.urgency_level, Patient.created_at.desc())
+    
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    patients = pagination.items
+    
+    return render_template(
+        'admin/manage_patients.html',
+        patients=patients,
+        pagination=pagination,
+        blood_group_filter=blood_group_filter,
+        urgency_filter=urgency_filter,
+        fulfillment_filter=fulfillment_filter,
+        title='Manage Patients'
+    )
+
+
+@admin_bp.route('/feedback')
+@admin_required
+def manage_feedback():
+    """Manage feedback submissions."""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    # Filter options
+    status_filter = request.args.get('status', 'all')
+    
+    query = Feedback.query
+    
+    # Apply filters
+    if status_filter == 'pending':
+        query = query.filter_by(is_resolved=False)
+    elif status_filter == 'resolved':
+        query = query.filter_by(is_resolved=True)
+    
+    # Order by creation date (newest first)
+    query = query.order_by(Feedback.created_at.desc())
+    
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    feedback_items = pagination.items
+    
+    return render_template(
+        'admin/manage_feedback.html',
+        feedback_items=feedback_items,
+        pagination=pagination,
+        status_filter=status_filter,
+        title='Manage Feedback'
+    )
+
+
+@admin_bp.route('/user/<int:user_id>/toggle', methods=['POST'])
+@admin_required
+def toggle_user_status(user_id):
+    """Activate or deactivate a user."""
+    user = User.query.get_or_404(user_id)
+    
+    if user.role == 'admin' and user.id != current_user.id:
+        # Prevent deactivating other admins
+        flash('Cannot modify other admin accounts.', 'danger')
+        return redirect(url_for('admin.manage_users'))
+    
+    user.is_active = not user.is_active
+    db.session.commit()
+    
+    status = "activated" if user.is_active else "deactivated"
+    flash(f'User {user.email} has been {status}.', 'success')
+    
+    return redirect(url_for('admin.manage_users'))
+
+
+@admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    """Delete a user (admin only) - soft delete with 24h grace period."""
+    user = User.query.get_or_404(user_id)
+    
+    if user.role == 'admin':
+        flash('Cannot delete admin accounts.', 'danger')
+        return redirect(url_for('admin.manage_users'))
+    
+    if user.id == current_user.id:
+        flash('Cannot delete your own account.', 'danger')
+        return redirect(url_for('admin.manage_users'))
+    
+    # Soft delete - set deleted_at timestamp
+    email = user.email
+    user.deleted_at = datetime.utcnow()
+    user.is_active = False
+    if user.donor:
+        user.donor.is_available = False
+    
+    db.session.commit()
+    
+    flash(f'User {email} has been deleted. They can re-register after 24 hours.', 'success')
+    return redirect(url_for('admin.manage_users'))
+
+
+@admin_bp.route('/feedback/<int:feedback_id>/respond', methods=['GET', 'POST'])
+@admin_required
+def respond_feedback(feedback_id):
+    """Respond to feedback."""
+    feedback = Feedback.query.get_or_404(feedback_id)
+    form = AdminFeedbackResponseForm()
+    
+    if form.validate_on_submit():
+        feedback.admin_response = form.admin_response.data
+        feedback.is_resolved = True
+        feedback.resolved_at = datetime.utcnow()
+        db.session.commit()
+        
+        # Send email response
+        subject = f"Re: {feedback.subject}"
+        body = f"""
+Dear {feedback.name},
+
+Thank you for your feedback regarding: {feedback.subject}
+
+Admin Response:
+{feedback.admin_response}
+
+Best regards,
+BloodCircle Team
+        """
+        send_notification_email(feedback.email, subject, body)
+        
+        flash('Response sent successfully!', 'success')
+        return redirect(url_for('admin.manage_feedback'))
+    
+    return render_template(
+        'admin/respond_feedback.html',
+        feedback=feedback,
+        form=form,
+        title='Respond to Feedback'
+    )
+
+
+@admin_bp.route('/feedback/<int:feedback_id>/resolve', methods=['POST'])
+@admin_required
+def resolve_feedback(feedback_id):
+    """Mark feedback as resolved without response."""
+    feedback = Feedback.query.get_or_404(feedback_id)
+    
+    feedback.is_resolved = True
+    feedback.resolved_at = datetime.utcnow()
+    db.session.commit()
+    
+    flash('Feedback marked as resolved.', 'success')
+    return redirect(url_for('admin.manage_feedback'))
+
+
+@admin_bp.route('/patient/<int:patient_id>/fulfill', methods=['POST'])
+@admin_required
+def fulfill_patient_request(patient_id):
+    """Mark patient request as fulfilled."""
+    patient = Patient.query.get_or_404(patient_id)
+    
+    patient.is_fulfilled = True
+    patient.updated_at = datetime.utcnow()
+    db.session.commit()
+    
+    flash(f'Request for {patient.full_name} marked as fulfilled.', 'success')
+    return redirect(url_for('admin.manage_patients'))
+
+
+@admin_bp.route('/stats/export')
+@admin_required
+def export_stats():
+    """Export statistics as CSV."""
+    import csv
+    from io import StringIO
+    from flask import make_response
+    
+    # Get statistics
+    stats = get_blood_group_statistics()
+    
+    # Create CSV
+    si = StringIO()
+    writer = csv.writer(si)
+    
+    # Write headers
+    writer.writerow(['Blood Group', 'Donors', 'Patient Requests'])
+    
+    # Write data
+    blood_groups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
+    for bg in blood_groups:
+        writer.writerow([
+            bg,
+            stats['donor_distribution'].get(bg, 0),
+            stats['patient_requests'].get(bg, 0)
+        ])
+    
+    # Create response
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=blood_donation_stats.csv"
+    output.headers["Content-type"] = "text/csv"
+    
+    return output
+
+
+@admin_bp.route('/block-user/<int:user_id>', methods=['POST'])
+@login_required
+def block_user(user_id):
+    """Block a user from accessing the platform."""
+    if current_user.role != 'admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    if user.role == 'admin':
+        flash('Cannot block admin users.', 'danger')
+        return redirect(url_for('admin.manage_users'))
+    
+    user.is_blocked = True
+    user.is_active = False
+    db.session.commit()
+    
+    flash(f'User {user.email} has been blocked successfully.', 'success')
+    return redirect(url_for('admin.manage_users'))
+
+
+@admin_bp.route('/unblock-user/<int:user_id>', methods=['POST'])
+@login_required
+def unblock_user(user_id):
+    """Unblock a user."""
+    if current_user.role != 'admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    user.is_blocked = False
+    user.is_active = True
+    db.session.commit()
+    
+    flash(f'User {user.email} has been unblocked successfully.', 'success')
+    return redirect(url_for('admin.manage_users'))
+
+
+@admin_bp.route('/sub-admin/dashboard')
+@login_required
+def sub_admin_dashboard():
+    """Sub-admin dashboard - view only access."""
+    if current_user.role != 'sub_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    # Get statistics (same as admin dashboard but read-only)
+    total_users = User.query.count()
+    total_donors = Donor.query.count()
+    total_patients = Patient.query.count()
+    active_donors = Donor.query.filter_by(is_available=True).count()
+    
+    # Get recent registrations
+    recent_users = User.query.order_by(User.created_at.desc()).limit(5).all()
+    recent_donors = Donor.query.order_by(Donor.created_at.desc()).limit(5).all()
+    
+    return render_template('admin/sub_admin_dashboard.html',
+                         total_users=total_users,
+                         total_donors=total_donors,
+                         total_patients=total_patients,
+                         active_donors=active_donors,
+                         recent_users=recent_users,
+                         recent_donors=recent_donors,
+                         title='Sub-Admin Dashboard')
+
+
+@admin_bp.route('/sub-admin/users')
+@login_required
+def sub_admin_users():
+    """View all users (read-only)."""
+    if current_user.role != 'sub_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('admin/sub_admin_users.html', users=users, title='View Users')
+
+
+@admin_bp.route('/sub-admin/donors')
+@login_required
+def sub_admin_donors():
+    """View all donors (read-only)."""
+    if current_user.role != 'sub_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    donors = Donor.query.order_by(Donor.created_at.desc()).all()
+    return render_template('admin/sub_admin_donors.html', donors=donors, title='View Donors')
+
+
+@admin_bp.route('/sub-admin/patients')
+@login_required
+def sub_admin_patients():
+    """View all patients (read-only)."""
+    if current_user.role != 'sub_admin':
+        flash('Access denied.', 'danger')
+        return redirect(url_for('main.index'))
+    
+    patients = Patient.query.order_by(Patient.created_at.desc()).all()
+    return render_template('admin/sub_admin_patients.html', patients=patients, title='View Patients')

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-danger">Delete Account</h6>
+                    <p class="text-muted">Once you delete your account, you will have 30 days to recover it. After 30 days, your account will be permanently deleted.</p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold">Are you sure you want to delete your account?</p>
+                <ul>
+                    <li>Your account will be deactivated immediately</li>
+                    <li>You can recover it within 30 days by logging in</li>
+                    <li>After 30 days, your account will be permanently deleted</li>
+                    <li>All your donation history will be lost after 30 days</li>
+                </ul>
+                <p class="text-danger"><strong>This action cannot be undone after 30 days!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('auth.delete_account') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% block title %}My Profile - BloodCircle{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <div class="profile-avatar mb-3">
+                        <i class="fas fa-user-circle fa-6x text-danger"></i>
+                    </div>
+                    <h4>{{ donor.first_name }} {{ donor.last_name }}</h4>
+                    <p class="text-muted">{{ current_user.email }}</p>
+                    <p class="text-muted"><i class="fas fa-phone"></i> {{ current_user.phone }}</p>
+                    
+                    <div class="mt-3">
+                        {% if donor.is_available %}
+                            <span class="badge bg-success fs-6"><i class="fas fa-check-circle"></i> Available</span>
+                        {% else %}
+                            <span class="badge bg-secondary fs-6"><i class="fas fa-times-circle"></i> Not Available</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{{ url_for('donor.edit_profile') }}" class="btn btn-danger">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-tint"></i> Blood Group:</strong>
+                            <p class="text-danger fs-4 mb-0">{{ donor.blood_group }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-birthday-cake"></i> Date of Birth:</strong>
+                            <p>{{ donor.date_of_birth.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-venus-mars"></i> Gender:</strong>
+                            <p>{{ donor.gender }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-weight"></i> Weight:</strong>
+                            <p>{{ donor.weight }} kg</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong><i class="fas fa-map-marker-alt"></i> Address:</strong>
+                            <p>{{ donor.address }}<br>{{ donor.city }}, {{ donor.state }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if donor.last_donation_date %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong><i class="fas fa-calendar-check"></i> Last Donation:</strong>
+                            <p>{{ donor.last_donation_date.strftime('%B %d, %Y') }}</p>
+                            {% if donor.can_donate() %}
+                                <span class="badge bg-success">Eligible to donate</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Please wait before next donation</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if donor.medical_conditions %}
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong><i class="fas fa-notes-medical"></i> Medical Conditions:</strong>
+                            <p>{{ donor.medical_conditions }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <strong><i class="fas fa-clock"></i> Member Since:</strong>
+                            <p>{{ donor.created_at.strftime('%B %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow mt-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Donation Eligibility</h5>
+                </div>
+                <div class="card-body">
+                    {% if donor.can_donate() %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> You are eligible to donate blood!
+                            <p class="mb-0 mt-2">Thank you for your willingness to save lives.</p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> You need to wait before your next donation.
+                            <p class="mb-0 mt-2">Donors should wait at least 90 days (3 months) between whole blood donations.</p>
+                        </div>
+                    {% endif %}
+                    
+                    <h6 class="mt-3">General Eligibility Criteria:</h6>
+                    <ul>
+                        <li>Age: 18-65 years</li>
+                        <li>Weight: At least 50 kg</li>
+                        <li>Wait 3 months between donations</li>
+                        <li>Be in good health</li>
+                        <li>No recent infections or medications</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-danger">Delete Account</h6>
+                    <p class="text-muted">Once you delete your account, you will have 30 days to recover it. After 30 days, your account will be permanently deleted.</p>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        <i class="fas fa-trash-alt me-2"></i>Delete My Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="fw-bold">Are you sure you want to delete your account?</p>
+                <ul>
+                    <li>Your account will be deactivated immediately</li>
+                    <li>You can recover it within 30 days by logging in</li>
+                    <li>After 30 days, your account will be permanently deleted</li>
+                    <li>All your donation history will be lost after 30 days</li>
+                </ul>
+                <p class="text-danger"><strong>This action cannot be undone after 30 days!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('auth.delete_account') }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
