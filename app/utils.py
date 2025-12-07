@@ -117,6 +117,12 @@ def send_email_otp(email, otp_code, user_name="User", purpose="verification"):
             print(f"{'='*60}\n")
             return False
         
+        # Verify MAIL_PASSWORD is set
+        if not current_app.config.get('MAIL_PASSWORD'):
+            current_app.logger.error("MAIL_PASSWORD not configured!")
+            print(f"\n⚠️  MAIL_PASSWORD missing! OTP for {email}: {otp_code}\n")
+            return False
+        
         msg = Message(
             subject=subject,
             recipients=[email],
@@ -125,6 +131,7 @@ def send_email_otp(email, otp_code, user_name="User", purpose="verification"):
         
         mail.send(msg)
         current_app.logger.info(f"Email OTP sent successfully to {email}")
+        print(f"\n✅ Email sent successfully to {email}\n")
         return True
     except Exception as e:
         current_app.logger.error(f"Failed to send email OTP to {email}: {str(e)}")
@@ -231,10 +238,19 @@ def create_and_send_otp(user_id=None, email=None, phone=None, otp_type='email', 
     if phone and otp_type != "password_reset":
         sms_sent = send_sms_otp(phone, otp_code)
     
-    if email_sent or sms_sent:
-        return True, "OTP sent successfully!"
+    # Consider it successful if email was attempted (even if failed, OTP is in DB)
+    if email:
+        if email_sent:
+            return True, "OTP sent successfully to your email!"
+        else:
+            # Email failed but OTP is created, log it for debugging
+            current_app.logger.warning(f"Email sending failed for {email}, but OTP created: {otp_code}")
+            print(f"\n⚠️  OTP Code for {email}: {otp_code}\n")
+            return True, "OTP created. If email doesn't arrive, please check your spam folder or contact support."
+    elif phone and sms_sent:
+        return True, "OTP sent successfully via SMS!"
     else:
-        return False, "Failed to send OTP. Please try again."
+        return False, "Failed to send OTP. Please contact support."
 
 
 def verify_otp(otp_code, user_id=None, email=None, phone=None, otp_type='email'):

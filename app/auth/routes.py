@@ -126,21 +126,24 @@ def resend_otp():
     phone = session.get('pending_phone')
     
     if not user_id or not email:
-        flash('No pending verification found.', 'warning')
+        flash('No pending verification found. Please register first.', 'warning')
         return redirect(url_for('auth.register'))
     
-    success, message = create_and_send_otp(
-        user_id=user_id,
-        email=email,
-        phone=phone,
-        otp_type='email',
-        user_name='User'
-    )
-    
-    if success:
-        flash('OTP resent successfully!', 'success')
-    else:
-        flash(f'Failed to resend OTP: {message}', 'danger')
+    try:
+        success, message = create_and_send_otp(
+            user_id=user_id,
+            email=email,
+            phone=phone,
+            otp_type='email',
+            user_name='User'
+        )
+        
+        if success:
+            flash('OTP has been resent to your email. Please check your inbox (and spam folder).', 'success')
+        else:
+            flash(f'Failed to resend OTP: {message}. Please try again or contact support.', 'danger')
+    except Exception as e:
+        flash(f'Error resending OTP: {str(e)}. Please try again.', 'danger')
     
     return redirect(url_for('auth.verify_otp_route'))
 
