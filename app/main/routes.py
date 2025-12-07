@@ -240,3 +240,36 @@ def delete_all_users():
     except Exception as e:
         db.session.rollback()
         return f"Error: {str(e)}"
+
+
+@main_bp.route('/create-admin-chiranjeevi-temp-route-67890')
+def create_admin_chiranjeevi():
+    """Temporary route to create admin with Zoho email."""
+    try:
+        # Check if user exists
+        existing_user = User.query.filter_by(email='chiranjeevi.kola@zohomail.in').first()
+        
+        if existing_user:
+            # Update existing user to admin
+            existing_user.role = 'admin'
+            existing_user.is_verified = True
+            existing_user.is_active = True
+            existing_user.set_password('g0abdkbxa6')
+            db.session.commit()
+            return f"User updated to admin! Login at /auth/login with chiranjeevi.kola@zohomail.in"
+        else:
+            # Create new admin user
+            admin = User(
+                email='chiranjeevi.kola@zohomail.in',
+                phone='+919703065484',
+                role='admin',
+                is_verified=True,
+                is_active=True
+            )
+            admin.set_password('g0abdkbxa6')
+            db.session.add(admin)
+            db.session.commit()
+            return f"Admin created! Login at /auth/login with chiranjeevi.kola@zohomail.in and password g0abdkbxa6"
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}"
