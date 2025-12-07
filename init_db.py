@@ -34,6 +34,27 @@ def init_database():
             print("  - otps")
             print("\nExisting data is preserved!")
             
+            # Create default admin if it doesn't exist
+            admin_email = 'chiranjeevi.kola@zohomail.in'
+            existing_admin = User.query.filter_by(email=admin_email).first()
+            
+            if not existing_admin:
+                print("\n Creating default admin account...")
+                admin = User(
+                    email=admin_email,
+                    phone='+919703065484',
+                    role='admin',
+                    is_verified=True,
+                    is_active=True
+                )
+                admin.set_password('g0abdkbxa6')
+                db.session.add(admin)
+                db.session.commit()
+                print(f"✓ Admin account created: {admin_email}")
+                print("  Password: g0abdkbxa6")
+            else:
+                print(f"\n✓ Admin account already exists: {admin_email}")
+            
         except Exception as e:
             print(f"\n✗ Error initializing database: {str(e)}")
             sys.exit(1)
