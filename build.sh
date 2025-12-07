@@ -5,11 +5,5 @@ set -o errexit
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# FORCE fix database schema issues FIRST
-python force_fix_db.py
-
-# Then run the regular fix
-python fix_database.py
-
-# Initialize the database
+# Initialize and fix database in one step
 python init_db.py

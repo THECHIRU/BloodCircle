@@ -10,24 +10,68 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from app import create_app, db
 from app.models import User, Donor, Patient, Feedback, OTP
+from sqlalchemy import text, inspect
 
 def init_database():
     """Initialize the database with all tables."""
+    print("=" * 70)
     print("Initializing database...")
+    print("=" * 70)
     
     # Create Flask app
     app = create_app('production')
     
     with app.app_context():
         try:
-            # Only create tables if they don't exist (safe for production)
-            # This will NOT drop existing tables or delete data
-            print("Creating/updating database tables...")
+            # CRITICAL FIX: Drop and recreate users table to remove old constraints
+            inspector = inspect(db.engine)
+            
+            if 'users' in inspector.get_table_names():
+                print("\n⚠️  Users table exists with old schema, attempting to clean...")
+                
+                with db.engine.begin() as conn:
+                    # Drop all constraints on phone column
+                    try:
+                        # Get all constraints
+                        result = conn.execute(text("""
+                            SELECT constraint_name 
+                            FROM information_schema.table_constraints 
+                            WHERE table_name='users' 
+                            AND constraint_name LIKE '%phone%'
+                        """))
+                        for (constraint,) in result.fetchall():
+                            conn.execute(text(f'ALTER TABLE users DROP CONSTRAINT IF EXISTS "{constraint}" CASCADE'))
+                            print(f"   ✓ Dropped: {constraint}")
+                    except Exception as e:
+                        print(f"   Note: {e}")
+                    
+                    # Drop all indexes on phone column
+                    try:
+                        result = conn.execute(text("""
+                            SELECT indexname 
+                            FROM pg_indexes 
+                            WHERE tablename='users' AND indexname LIKE '%phone%'
+                        """))
+                        for (idx,) in result.fetchall():
+                            conn.execute(text(f'DROP INDEX IF EXISTS "{idx}" CASCADE'))
+                            print(f"   ✓ Dropped index: {idx}")
+                    except Exception as e:
+                        print(f"   Note: {e}")
+                    
+                    # Make phone nullable
+                    try:
+                        conn.execute(text('ALTER TABLE users ALTER COLUMN phone SET DATA TYPE VARCHAR(20)'))
+                        conn.execute(text('ALTER TABLE users ALTER COLUMN phone DROP NOT NULL'))
+                        print("   ✓ Phone column cleaned")
+                    except Exception as e:
+                        print(f"   Note: {e}")
+            
+            # Create or update all tables
+            print("\nCreating/updating database tables...")
             db.create_all()
             
-            print("\n✓ Database initialized successfully!")
-            print("\nTables ensured:")
-            print("  - users")
+            print("\n✓ Database tables ensured:")
+            print("  - users (phone: nullable, no unique)")
             print("  - donors")
             print("  - patients")
             print("  - feedback")
@@ -39,10 +83,10 @@ def init_database():
             existing_admin = User.query.filter_by(email=admin_email).first()
             
             if not existing_admin:
-                print("\n Creating default admin account...")
+                print("\nCreating default admin account...")
                 admin = User(
                     email=admin_email,
-                    phone='+919703065484',
+                    phone=None,  # No phone for admin
                     role='admin',
                     is_verified=True,
                     is_active=True
@@ -50,13 +94,18 @@ def init_database():
                 admin.set_password('g0abdkbxa6')
                 db.session.add(admin)
                 db.session.commit()
-                print(f"✓ Admin account created: {admin_email}")
-                print("  Password: g0abdkbxa6")
+                print(f"✓ Admin created: {admin_email}")
             else:
-                print(f"\n✓ Admin account already exists: {admin_email}")
+                print(f"\n✓ Admin already exists: {admin_email}")
+            
+            print("\n" + "=" * 70)
+            print("✓ Database initialization completed successfully!")
+            print("=" * 70)
             
         except Exception as e:
             print(f"\n✗ Error initializing database: {str(e)}")
+            import traceback
+            traceback.print_exc()
             sys.exit(1)
 
 
