@@ -212,6 +212,19 @@ def login():
                 flash('Your account has been deactivated. Please contact support.', 'danger')
                 return redirect(url_for('auth.login'))
             
+            # Admin and sub-admin login (no OTP required) - CHECK FIRST!
+            if user.role == 'admin' or user.role == 'sub_admin':
+                login_user(user, remember=form.remember_me.data)
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+                
+                if user.role == 'admin':
+                    flash('Welcome back, Admin!', 'success')
+                    return redirect(url_for('admin.dashboard'))
+                else:
+                    flash('Welcome back, Sub-Admin!', 'success')
+                    return redirect(url_for('admin.sub_admin_dashboard'))
+            
             # Remove OTP verification requirement - users are auto-verified
             # Check if user has completed profile
             if user.role == 'donor' and not user.donor:
@@ -227,19 +240,6 @@ def login():
                 user.last_login = datetime.utcnow()
                 db.session.commit()
                 return redirect(url_for('patient.register'))
-            
-            # Admin and sub-admin login (no OTP required)
-            if user.role == 'admin' or user.role == 'sub_admin':
-                login_user(user, remember=form.remember_me.data)
-                user.last_login = datetime.utcnow()
-                db.session.commit()
-                
-                if user.role == 'admin':
-                    flash('Welcome back, Admin!', 'success')
-                    return redirect(url_for('admin.dashboard'))
-                else:
-                    flash('Welcome back, Sub-Admin!', 'success')
-                    return redirect(url_for('admin.sub_admin_dashboard'))
             
             # Login successful for non-admin users
             login_user(user, remember=form.remember_me.data)
