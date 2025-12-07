@@ -16,26 +16,23 @@ def init_database():
     print("Initializing database...")
     
     # Create Flask app
-    app = create_app('development')
+    app = create_app('production')
     
     with app.app_context():
         try:
-            # Drop all existing tables (use with caution!)
-            print("Dropping existing tables...")
-            db.drop_all()
-            
-            # Create all tables
-            print("Creating new tables...")
+            # Only create tables if they don't exist (safe for production)
+            # This will NOT drop existing tables or delete data
+            print("Creating/updating database tables...")
             db.create_all()
             
             print("\n✓ Database initialized successfully!")
-            print("\nCreated tables:")
+            print("\nTables ensured:")
             print("  - users")
             print("  - donors")
             print("  - patients")
             print("  - feedback")
             print("  - otps")
-            print("\nNext step: Run 'python create_admin.py' to create an admin user")
+            print("\nExisting data is preserved!")
             
         except Exception as e:
             print(f"\n✗ Error initializing database: {str(e)}")
