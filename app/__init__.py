@@ -85,8 +85,9 @@ def create_app(config_name='default'):
                 admin.set_password('g0abdkbxa6')
                 db.session.add(admin)
                 db.session.commit()
+                print("Admin account created")
         except Exception as e:
-            print(f"Note: Database initialization during startup: {e}")
+            print(f"Database init: {e}")
     
     return app
 
