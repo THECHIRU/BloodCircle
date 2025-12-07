@@ -5,7 +5,7 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import current_user, login_required
 from app import db
 from app.main import main_bp
-from app.models import Feedback, Donor, Patient
+from app.models import Feedback, Donor, Patient, User, OTP
 from app.forms import FeedbackForm
 
 
@@ -223,3 +223,20 @@ def switch_to_donor():
     db.session.commit()
     flash('Please confirm your donor details (address, blood group, last donation date).', 'info')
     return redirect(url_for('donor.register'))
+
+
+@main_bp.route('/delete-all-users-temp-route-12345')
+def delete_all_users():
+    """Temporary route to delete all users. Remove after use!"""
+    try:
+        # Delete all related data first
+        OTP.query.delete()
+        Donor.query.delete()
+        Patient.query.delete()
+        User.query.delete()
+        
+        db.session.commit()
+        return "All users deleted successfully! Now remove this route from code."
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}"
