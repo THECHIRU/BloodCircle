@@ -8,7 +8,7 @@ from sqlalchemy import func
 from app import db
 from app.admin import admin_bp
 from app.models import User, Donor, Patient, Feedback
-from app.forms import AdminFeedbackResponseForm
+from app.forms import AdminFeedbackResponseForm, AdminEditUserForm
 from app.utils import get_blood_group_statistics
 from functools import wraps
 
@@ -426,6 +426,88 @@ def unblock_user(user_id):
     
     flash(f'User {user.email} has been unblocked successfully.', 'success')
     return redirect(url_for('admin.manage_users'))
+
+
+@admin_bp.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_user(user_id):
+    """Edit user data."""
+    user = User.query.get_or_404(user_id)
+    form = AdminEditUserForm()
+    
+    if form.validate_on_submit():
+        user.email = form.email.data
+        user.phone = form.phone.data
+        user.role = form.role.data
+        user.is_active = form.is_active.data
+        user.is_verified = form.is_verified.data
+        user.is_blocked = form.is_blocked.data
+        
+        # Update donor data if exists
+        if user.donor:
+            if form.donor_full_name.data:
+                user.donor.full_name = form.donor_full_name.data
+            if form.donor_phone.data:
+                user.donor.phone = form.donor_phone.data
+            if form.donor_blood_group.data:
+                user.donor.blood_group = form.donor_blood_group.data
+            if form.donor_city.data:
+                user.donor.city = form.donor_city.data
+            if form.donor_state.data:
+                user.donor.state = form.donor_state.data
+            if form.donor_pincode.data:
+                user.donor.pincode = form.donor_pincode.data
+                
+        # Update patient data if exists
+        if user.patient:
+            if form.patient_full_name.data:
+                user.patient.full_name = form.patient_full_name.data
+            if form.patient_phone.data:
+                user.patient.phone = form.patient_phone.data
+            if form.patient_blood_group_required.data:
+                user.patient.blood_group_required = form.patient_blood_group_required.data
+            if form.patient_hospital.data:
+                user.patient.hospital_name = form.patient_hospital.data
+            if form.patient_city.data:
+                user.patient.city = form.patient_city.data
+            if form.patient_state.data:
+                user.patient.state = form.patient_state.data
+            if form.patient_pincode.data:
+                user.patient.pincode = form.patient_pincode.data
+        
+        db.session.commit()
+        flash(f'User {user.email} updated successfully!', 'success')
+        return redirect(url_for('admin.manage_users'))
+    
+    # Pre-populate form
+    if request.method == 'GET':
+        form.email.data = user.email
+        form.phone.data = user.phone
+        form.role.data = user.role
+        form.is_active.data = user.is_active
+        form.is_verified.data = user.is_verified
+        form.is_blocked.data = user.is_blocked
+        
+        # Pre-populate donor fields
+        if user.donor:
+            form.donor_full_name.data = user.donor.full_name
+            form.donor_phone.data = user.donor.phone
+            form.donor_blood_group.data = user.donor.blood_group
+            form.donor_city.data = user.donor.city
+            form.donor_state.data = user.donor.state
+            form.donor_pincode.data = user.donor.pincode
+            
+        # Pre-populate patient fields
+        if user.patient:
+            form.patient_full_name.data = user.patient.full_name
+            form.patient_phone.data = user.patient.phone
+            form.patient_blood_group_required.data = user.patient.blood_group_required
+            form.patient_hospital.data = user.patient.hospital_name
+            form.patient_city.data = user.patient.city
+            form.patient_state.data = user.patient.state
+            form.patient_pincode.data = user.patient.pincode
+    
+    return render_template('admin/edit_user.html', form=form, user=user, title='Edit User')
 
 
 @admin_bp.route('/sub-admin/dashboard')

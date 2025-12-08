@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-edit"></i> Edit User: {{ user.email }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <h5 class="mb-3">User Account Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.email.label(class="form-label") }}
+                                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback">{{ form.email.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control", placeholder="User account phone") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.role.label(class="form-label") }}
+                                {{ form.role(class="form-select") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    {{ form.is_active.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_verified(class="form-check-input") }}
+                                    {{ form.is_verified.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_blocked(class="form-check-input") }}
+                                    {{ form.is_blocked.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if user.donor %}
+                        <hr>
+                        <h5 class="mb-3 text-success"><i class="fas fa-hand-holding-heart"></i> Donor Profile</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.donor_full_name.label(class="form-label") }}
+                                {{ form.donor_full_name(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.donor_phone.label(class="form-label") }}
+                                {{ form.donor_phone(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.donor_blood_group.label(class="form-label") }}
+                                {{ form.donor_blood_group(class="form-select") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.donor_city.label(class="form-label") }}
+                                {{ form.donor_city(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.donor_state.label(class="form-label") }}
+                                {{ form.donor_state(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.donor_pincode.label(class="form-label") }}
+                                {{ form.donor_pincode(class="form-control") }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if user.patient %}
+                        <hr>
+                        <h5 class="mb-3 text-primary"><i class="fas fa-hospital-user"></i> Patient Profile</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.patient_full_name.label(class="form-label") }}
+                                {{ form.patient_full_name(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.patient_phone.label(class="form-label") }}
+                                {{ form.patient_phone(class="form-control") }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.patient_blood_group_required.label(class="form-label") }}
+                                {{ form.patient_blood_group_required(class="form-select") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.patient_hospital.label(class="form-label") }}
+                                {{ form.patient_hospital(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.patient_city.label(class="form-label") }}
+                                {{ form.patient_city(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.patient_state.label(class="form-label") }}
+                                {{ form.patient_state(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.patient_pincode.label(class="form-label") }}
+                                {{ form.patient_pincode(class="form-control") }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

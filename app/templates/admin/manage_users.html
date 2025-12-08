@@ -30,7 +30,17 @@
                         <tr>
                             <td>{{ user.id }}</td>
                             <td>{{ user.email }}</td>
-                            <td>{{ user.phone }}</td>
+                            <td>
+                                {% if user.donor and user.donor.phone %}
+                                    {{ user.donor.phone }}
+                                {% elif user.patient and user.patient.phone %}
+                                    {{ user.patient.phone }}
+                                {% elif user.phone %}
+                                    {{ user.phone }}
+                                {% else %}
+                                    <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="badge bg-{% if user.role == 'admin' %}danger{% elif user.role == 'donor' %}success{% else %}primary{% endif %}">
                                     {{ user.role|title }}
@@ -54,30 +64,31 @@
                             </td>
                             <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary" title="Edit User">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
                                 {% if user.role != 'admin' %}
                                     {% if user.is_blocked %}
                                         <form method="POST" action="{{ url_for('admin.unblock_user', user_id=user.id) }}" style="display:inline;">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <button type="submit" class="btn btn-sm btn-success" title="Unblock User">
-                                                <i class="fas fa-unlock"></i> Unblock
+                                                <i class="fas fa-unlock"></i>
                                             </button>
                                         </form>
                                     {% else %}
                                         <form method="POST" action="{{ url_for('admin.block_user', user_id=user.id) }}" style="display:inline;">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Block this user?')" title="Block User">
-                                                <i class="fas fa-ban"></i> Block
+                                                <i class="fas fa-ban"></i>
                                             </button>
                                         </form>
                                     {% endif %}
                                     <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this user? They can re-register after 24 hours.')">
-                                            <i class="fas fa-trash"></i> Delete
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
-                                {% else %}
-                                    <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
                         </tr>

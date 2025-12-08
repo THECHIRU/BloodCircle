@@ -403,6 +403,60 @@ class FeedbackForm(FlaskForm):
     submit = SubmitField('Submit Feedback')
 
 
+class AdminEditUserForm(FlaskForm):
+    """Form for admin to edit user data."""
+    email = EmailField('Email Address', validators=[
+        DataRequired(message='Email is required'),
+        Email(message='Invalid email address'),
+        Length(max=120)
+    ])
+    phone = TelField('Phone Number', validators=[
+        Optional(),
+        Length(min=10, max=20, message='Invalid phone number')
+    ])
+    role = SelectField('Role', validators=[
+        DataRequired(message='Role is required')
+    ], choices=[
+        ('admin', 'Admin'),
+        ('donor', 'Donor'),
+        ('patient', 'Patient')
+    ])
+    is_active = BooleanField('Active')
+    is_verified = BooleanField('Verified')
+    is_blocked = BooleanField('Blocked')
+    
+    # Donor fields (if role is donor)
+    donor_full_name = StringField('Full Name (Donor)', validators=[Optional(), Length(max=100)])
+    donor_phone = TelField('Phone (Donor)', validators=[Optional(), Length(min=10, max=20)])
+    donor_blood_group = SelectField('Blood Group', validators=[Optional()], choices=[
+        ('', 'Select'),
+        ('A+', 'A+'), ('A-', 'A-'),
+        ('B+', 'B+'), ('B-', 'B-'),
+        ('O+', 'O+'), ('O-', 'O-'),
+        ('AB+', 'AB+'), ('AB-', 'AB-')
+    ])
+    donor_city = StringField('City (Donor)', validators=[Optional(), Length(max=50)])
+    donor_state = StringField('State (Donor)', validators=[Optional(), Length(max=50)])
+    donor_pincode = StringField('Pincode (Donor)', validators=[Optional(), Length(max=10)])
+    
+    # Patient fields (if role is patient)
+    patient_full_name = StringField('Full Name (Patient)', validators=[Optional(), Length(max=100)])
+    patient_phone = TelField('Phone (Patient)', validators=[Optional(), Length(min=10, max=20)])
+    patient_blood_group_required = SelectField('Blood Group Required', validators=[Optional()], choices=[
+        ('', 'Select'),
+        ('A+', 'A+'), ('A-', 'A-'),
+        ('B+', 'B+'), ('B-', 'B-'),
+        ('O+', 'O+'), ('O-', 'O-'),
+        ('AB+', 'AB+'), ('AB-', 'AB-')
+    ])
+    patient_hospital = StringField('Hospital (Patient)', validators=[Optional(), Length(max=100)])
+    patient_city = StringField('City (Patient)', validators=[Optional(), Length(max=50)])
+    patient_state = StringField('State (Patient)', validators=[Optional(), Length(max=50)])
+    patient_pincode = StringField('Pincode (Patient)', validators=[Optional(), Length(max=10)])
+    
+    submit = SubmitField('Update User')
+
+
 class AdminLoginForm(FlaskForm):
     """Admin login form."""
     email = EmailField('Admin Email', validators=[
