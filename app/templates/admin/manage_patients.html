@@ -17,12 +17,13 @@
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
-                            <th>Blood Group</th>
+                            <th>Blood Needed</th>
+                            <th>Hospital</th>
                             <th>Location</th>
                             <th>Contact</th>
-                            <th>Blood Required</th>
                             <th>Urgency</th>
-                            <th>Hospital</th>
+                            <th>Required By</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -30,30 +31,30 @@
                         {% for patient in patients %}
                         <tr>
                             <td>{{ patient.id }}</td>
-                            <td>{{ patient.first_name }} {{ patient.last_name }}</td>
-                            <td><span class="badge bg-danger">{{ patient.blood_group }}</span></td>
-                            <td>{{ patient.city }}, {{ patient.state }}</td>
+                            <td>{{ patient.full_name }}</td>
+                            <td><span class="badge bg-danger">{{ patient.blood_group_required }}</span></td>
+                            <td>{{ patient.hospital_name }}</td>
+                            <td>{{ patient.city }}, {{ patient.state }}<br><small>{{ patient.pincode }}</small></td>
                             <td>
                                 {{ patient.user.email }}<br>
-                                <small>{{ patient.user.phone }}</small>
+                                <small>{{ patient.phone if patient.phone else 'None' }}</small>
                             </td>
                             <td>
-                                {% if patient.blood_required %}
-                                    <span class="badge bg-danger">Yes</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">No</span>
-                                {% endif %}
+                                <span class="badge bg-{% if patient.urgency_level == 'Critical' %}danger{% elif patient.urgency_level == 'Urgent' %}warning{% else %}success{% endif %}">
+                                    {{ patient.urgency_level }}
+                                </span>
                             </td>
                             <td>
-                                {% if patient.urgency %}
-                                    <span class="badge bg-{% if patient.urgency == 'Critical' %}danger{% elif patient.urgency == 'Urgent' %}warning{% else %}info{% endif %}">
-                                        {{ patient.urgency }}
-                                    </span>
+                                {{ patient.required_by_date.strftime('%Y-%m-%d') if patient.required_by_date else '-' }}<br>
+                                <small>{{ patient.days_remaining() }} days</small>
+                            </td>
+                            <td>
+                                {% if patient.is_fulfilled %}
+                                    <span class="badge bg-success">Fulfilled</span>
                                 {% else %}
-                                    <span class="text-muted">-</span>
+                                    <span class="badge bg-warning text-dark">Pending</span>
                                 {% endif %}
                             </td>
-                            <td>{{ patient.hospital_name or '-' }}</td>
                             <td>
                                 <span class="text-muted">Delete via Users</span>
                             </td>

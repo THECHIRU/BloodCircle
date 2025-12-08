@@ -18,6 +18,7 @@
                             <th>ID</th>
                             <th>Name</th>
                             <th>Blood Group</th>
+                            <th>Age/Gender</th>
                             <th>Location</th>
                             <th>Contact</th>
                             <th>Available</th>
@@ -29,12 +30,16 @@
                         {% for donor in donors %}
                         <tr>
                             <td>{{ donor.id }}</td>
-                            <td>{{ donor.first_name }} {{ donor.last_name }}</td>
+                            <td>{{ donor.full_name }}</td>
                             <td><span class="badge bg-danger">{{ donor.blood_group }}</span></td>
-                            <td>{{ donor.city }}, {{ donor.state }}</td>
+                            <td>
+                                {{ donor.get_age() }} years<br>
+                                <small>{{ donor.gender }}</small>
+                            </td>
+                            <td>{{ donor.city }}, {{ donor.state }}<br><small>{{ donor.pincode }}</small></td>
                             <td>
                                 {{ donor.user.email }}<br>
-                                <small>{{ donor.user.phone }}</small>
+                                <small>{{ donor.phone if donor.phone else 'None' }}</small>
                             </td>
                             <td>
                                 {% if donor.is_available %}
