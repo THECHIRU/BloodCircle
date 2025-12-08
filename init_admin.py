@@ -29,17 +29,13 @@ def init_admin():
             if existing_admin:
                 print(f"✓ Admin user exists: {admin_email}")
                 print(f"✓ Admin ID: {existing_admin.id}, Current Role: {existing_admin.role}")
-                # Force admin role for the main admin account
+                # Ensure role is 'admin' but preserve their data
                 if existing_admin.role != 'admin':
-                    print(f"⚠ Correcting role from '{existing_admin.role}' to 'admin'")
+                    print(f"⚠ Updating role from '{existing_admin.role}' to 'admin' (preserving all data)")
                     existing_admin.role = 'admin'
-                    # Remove any donor/patient profiles
-                    if existing_admin.donor:
-                        db.session.delete(existing_admin.donor)
-                    if existing_admin.patient:
-                        db.session.delete(existing_admin.patient)
                     db.session.commit()
-                    print("✓ Admin role corrected")
+                    print("✓ Admin role updated")
+                # Keep their donor/patient profiles intact - DO NOT DELETE USER DATA
             else:
                 print(f"Creating default admin user: {admin_email}")
                 admin = User(
