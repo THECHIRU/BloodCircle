@@ -43,10 +43,10 @@ def register():
         if existing_donor:
             # Update existing profile
             existing_donor.full_name = form.full_name.data
+            existing_donor.phone = form.phone.data
             existing_donor.blood_group = form.blood_group.data
             existing_donor.date_of_birth = form.date_of_birth.data
             existing_donor.gender = form.gender.data
-            existing_donor.address = form.address.data
             existing_donor.city = form.city.data
             existing_donor.state = form.state.data
             existing_donor.pincode = form.pincode.data
@@ -61,10 +61,10 @@ def register():
             donor = Donor(
                 user_id=current_user.id,
                 full_name=form.full_name.data,
+                phone=form.phone.data,
                 blood_group=form.blood_group.data,
                 date_of_birth=form.date_of_birth.data,
                 gender=form.gender.data,
-                address=form.address.data,
                 city=form.city.data,
                 state=form.state.data,
                 pincode=form.pincode.data,
@@ -86,10 +86,10 @@ def register():
     # Pre-fill form with existing data if available
     if request.method == 'GET' and existing_donor:
         form.full_name.data = existing_donor.full_name
+        form.phone.data = existing_donor.phone
         form.blood_group.data = existing_donor.blood_group
         form.date_of_birth.data = existing_donor.date_of_birth
         form.gender.data = existing_donor.gender
-        form.address.data = existing_donor.address
         form.city.data = existing_donor.city
         form.state.data = existing_donor.state
         form.pincode.data = existing_donor.pincode
@@ -156,7 +156,7 @@ def edit_profile():
         was_unavailable = not donor.is_available
         
         donor.full_name = form.full_name.data
-        donor.address = form.address.data
+        donor.phone = form.phone.data
         donor.city = form.city.data
         donor.state = form.state.data
         donor.pincode = form.pincode.data
@@ -178,7 +178,7 @@ def edit_profile():
     # Pre-populate form
     if request.method == 'GET':
         form.full_name.data = donor.full_name
-        form.address.data = donor.address
+        form.phone.data = donor.phone
         form.city.data = donor.city
         form.state.data = donor.state
         form.pincode.data = donor.pincode

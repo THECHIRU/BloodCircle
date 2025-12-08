@@ -61,10 +61,10 @@ class Donor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     full_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)  # Required for patients to contact
     blood_group = db.Column(db.String(5), nullable=False, index=True)  # A+, A-, B+, B-, O+, O-, AB+, AB-
     date_of_birth = db.Column(db.Date, nullable=False)
     gender = db.Column(db.String(10), nullable=False)  # Male, Female, Other
-    address = db.Column(db.String(200), nullable=False)
     city = db.Column(db.String(50), nullable=False, index=True)
     state = db.Column(db.String(50), nullable=False)
     pincode = db.Column(db.String(10), nullable=False)
@@ -103,11 +103,12 @@ class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     full_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)  # Required for donors to contact
     blood_group_required = db.Column(db.String(5), nullable=False, index=True)
     hospital_name = db.Column(db.String(100), nullable=False)
-    location = db.Column(db.String(200), nullable=False)
     city = db.Column(db.String(50), nullable=False, index=True)
     state = db.Column(db.String(50), nullable=False)
+    pincode = db.Column(db.String(10), nullable=False)
     urgency_level = db.Column(db.String(20), nullable=False)  # Critical, Urgent, Normal
     required_by_date = db.Column(db.Date, nullable=False)
     medical_condition = db.Column(db.Text)

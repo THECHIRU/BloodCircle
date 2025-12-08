@@ -41,11 +41,12 @@ def register():
         if existing_patient:
             # Update existing profile
             existing_patient.full_name = form.full_name.data
+            existing_patient.phone = form.phone.data
             existing_patient.blood_group_required = form.blood_group_required.data
             existing_patient.hospital_name = form.hospital_name.data
-            existing_patient.location = form.location.data
             existing_patient.city = form.city.data
             existing_patient.state = form.state.data
+            existing_patient.pincode = form.pincode.data
             existing_patient.urgency_level = form.urgency_level.data
             existing_patient.required_by_date = form.required_by_date.data
             existing_patient.medical_condition = form.medical_condition.data
@@ -57,11 +58,12 @@ def register():
             patient = Patient(
                 user_id=current_user.id,
                 full_name=form.full_name.data,
+                phone=form.phone.data,
                 blood_group_required=form.blood_group_required.data,
                 hospital_name=form.hospital_name.data,
-                location=form.location.data,
                 city=form.city.data,
                 state=form.state.data,
+                pincode=form.pincode.data,
                 urgency_level=form.urgency_level.data,
                 required_by_date=form.required_by_date.data,
                 medical_condition=form.medical_condition.data,
@@ -81,11 +83,12 @@ def register():
     # Pre-fill form with existing data if available
     if request.method == 'GET' and existing_patient:
         form.full_name.data = existing_patient.full_name
+        form.phone.data = existing_patient.phone
         form.blood_group_required.data = existing_patient.blood_group_required
         form.hospital_name.data = existing_patient.hospital_name
-        form.location.data = existing_patient.location
         form.city.data = existing_patient.city
         form.state.data = existing_patient.state
+        form.pincode.data = existing_patient.pincode
         form.urgency_level.data = existing_patient.urgency_level
         form.required_by_date.data = existing_patient.required_by_date
         form.medical_condition.data = existing_patient.medical_condition

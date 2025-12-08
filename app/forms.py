@@ -97,6 +97,10 @@ class DonorRegistrationForm(FlaskForm):
         DataRequired(message='Full name is required'),
         Length(min=2, max=100, message='Name must be 2-100 characters')
     ])
+    phone = TelField('Phone Number', validators=[
+        DataRequired(message='Phone number is required'),
+        Length(min=10, max=20, message='Invalid phone number')
+    ])
     blood_group = SelectField('Blood Group', validators=[
         DataRequired(message='Blood group is required')
     ], choices=[
@@ -120,10 +124,6 @@ class DonorRegistrationForm(FlaskForm):
         ('Male', 'Male'),
         ('Female', 'Female'),
         ('Other', 'Other')
-    ])
-    address = StringField('Street Address', validators=[
-        DataRequired(message='Address is required'),
-        Length(max=200)
     ])
     city = StringField('City', validators=[
         DataRequired(message='City is required'),
@@ -168,9 +168,9 @@ class DonorProfileEditForm(FlaskForm):
         DataRequired(message='Full name is required'),
         Length(min=2, max=100)
     ])
-    address = StringField('Street Address', validators=[
-        DataRequired(message='Address is required'),
-        Length(max=200)
+    phone = TelField('Phone Number', validators=[
+        DataRequired(message='Phone number is required'),
+        Length(min=10, max=20, message='Invalid phone number')
     ])
     city = StringField('City', validators=[
         DataRequired(message='City is required'),
@@ -199,6 +199,10 @@ class PatientRegistrationForm(FlaskForm):
         DataRequired(message='Full name is required'),
         Length(min=2, max=100)
     ])
+    phone = TelField('Phone Number', validators=[
+        DataRequired(message='Phone number is required'),
+        Length(min=10, max=20, message='Invalid phone number')
+    ])
     blood_group_required = SelectField('Blood Group Required', validators=[
         DataRequired(message='Blood group is required')
     ], choices=[
@@ -216,10 +220,6 @@ class PatientRegistrationForm(FlaskForm):
         DataRequired(message='Hospital name is required'),
         Length(max=100)
     ])
-    location = StringField('Hospital Address', validators=[
-        DataRequired(message='Location is required'),
-        Length(max=200)
-    ])
     city = StringField('City', validators=[
         DataRequired(message='City is required'),
         Length(max=50)
@@ -227,6 +227,10 @@ class PatientRegistrationForm(FlaskForm):
     state = StringField('State', validators=[
         DataRequired(message='State is required'),
         Length(max=50)
+    ])
+    pincode = StringField('Pincode', validators=[
+        DataRequired(message='Pincode is required'),
+        Length(min=5, max=10, message='Invalid pincode')
     ])
     urgency_level = SelectField('Urgency Level', validators=[
         DataRequired(message='Urgency level is required')

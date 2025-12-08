@@ -68,7 +68,8 @@
                     {% if donor.is_available and donor.can_donate() %}
                         <div class="alert alert-success alert-permanent">
                             <p class="mb-2"><strong>Email:</strong> {{ donor.user.email }}</p>
-                            <p class="mb-0"><strong>Phone:</strong> {{ donor.user.phone }}</p>
+                            <p class="mb-2"><strong>Phone:</strong> {{ donor.phone if donor.phone else 'Not provided' }}</p>
+                            <p class="mb-0"><strong>Location:</strong> {{ donor.city }}, {{ donor.state }} - {{ donor.pincode }}</p>
                         </div>
                         
                         <div class="alert alert-info alert-permanent">
