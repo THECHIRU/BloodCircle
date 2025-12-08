@@ -98,7 +98,7 @@ class DonorRegistrationForm(FlaskForm):
         Length(min=2, max=100, message='Name must be 2-100 characters')
     ])
     phone = TelField('Phone Number', validators=[
-        Optional(),
+        DataRequired(message='Phone number is required'),
         Length(min=10, max=20, message='Invalid phone number')
     ])
     blood_group = SelectField('Blood Group', validators=[
@@ -200,7 +200,7 @@ class PatientRegistrationForm(FlaskForm):
         Length(min=2, max=100)
     ])
     phone = TelField('Phone Number', validators=[
-        Optional(),
+        DataRequired(message='Phone number is required'),
         Length(min=10, max=20, message='Invalid phone number')
     ])
     blood_group_required = SelectField('Blood Group Required', validators=[
