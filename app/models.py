@@ -61,7 +61,7 @@ class Donor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     full_name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), nullable=False)  # Required for patients to contact
+    phone = db.Column(db.String(20), nullable=True)  # Optional for backward compatibility
     blood_group = db.Column(db.String(5), nullable=False, index=True)  # A+, A-, B+, B-, O+, O-, AB+, AB-
     date_of_birth = db.Column(db.Date, nullable=False)
     gender = db.Column(db.String(10), nullable=False)  # Male, Female, Other
@@ -103,7 +103,7 @@ class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     full_name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), nullable=False)  # Required for donors to contact
+    phone = db.Column(db.String(20), nullable=True)  # Optional for backward compatibility
     blood_group_required = db.Column(db.String(5), nullable=False, index=True)
     hospital_name = db.Column(db.String(100), nullable=False)
     city = db.Column(db.String(50), nullable=False, index=True)
