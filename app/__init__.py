@@ -66,8 +66,6 @@ def create_app(config_name='default'):
     # Initialize database tables on startup (tables only, admin is created in build script)
     with app.app_context():
         try:
-            # Drop all tables and recreate (only for fresh deployments)
-            db.drop_all()
             db.create_all()
             print("Database tables initialized successfully")
         except Exception as e:

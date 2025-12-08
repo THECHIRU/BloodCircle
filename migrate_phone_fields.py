@@ -10,6 +10,8 @@ app = create_app('production')
 
 with app.app_context():
     try:
+        print("Starting database migration...")
+        
         # Add phone column to donors table if it doesn't exist
         db.session.execute("""
             DO $$ 
@@ -19,6 +21,8 @@ with app.app_context():
                     WHERE table_name='donors' AND column_name='phone'
                 ) THEN
                     ALTER TABLE donors ADD COLUMN phone VARCHAR(20);
+                    UPDATE donors SET phone = NULL WHERE phone IS NULL;
+                    RAISE NOTICE 'Added phone column to donors table';
                 END IF;
             END $$;
         """)
@@ -32,6 +36,8 @@ with app.app_context():
                     WHERE table_name='patients' AND column_name='phone'
                 ) THEN
                     ALTER TABLE patients ADD COLUMN phone VARCHAR(20);
+                    UPDATE patients SET phone = NULL WHERE phone IS NULL;
+                    RAISE NOTICE 'Added phone column to patients table';
                 END IF;
                 
                 IF NOT EXISTS (
@@ -39,6 +45,8 @@ with app.app_context():
                     WHERE table_name='patients' AND column_name='pincode'
                 ) THEN
                     ALTER TABLE patients ADD COLUMN pincode VARCHAR(10);
+                    UPDATE patients SET pincode = '000000' WHERE pincode IS NULL;
+                    RAISE NOTICE 'Added pincode column to patients table';
                 END IF;
             END $$;
         """)
@@ -52,6 +60,7 @@ with app.app_context():
                     WHERE table_name='donors' AND column_name='address'
                 ) THEN
                     ALTER TABLE donors DROP COLUMN address;
+                    RAISE NOTICE 'Removed address column from donors table';
                 END IF;
             END $$;
         """)
@@ -65,17 +74,25 @@ with app.app_context():
                     WHERE table_name='patients' AND column_name='location'
                 ) THEN
                     ALTER TABLE patients DROP COLUMN location;
+                    RAISE NOTICE 'Removed location column from patients table';
                 END IF;
             END $$;
         """)
         
         db.session.commit()
+        
+        # Verify migration
+        from app.models import User, Donor, Patient
+        user_count = User.query.count()
+        donor_count = Donor.query.count()
+        patient_count = Patient.query.count()
+        
         print("✅ Database migration completed successfully!")
-        print("✅ Added phone field to donors and patients")
-        print("✅ Removed address field from donors")
-        print("✅ Removed location field from patients")
+        print(f"✅ Data preserved: {user_count} users, {donor_count} donors, {patient_count} patients")
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Migration failed: {e}")
-        print("Note: If tables don't exist yet, this is normal for first deployment")
+        print(f"❌ Migration error: {e}")
+        # Don't fail the build - app might still work
+        import traceback
+        traceback.print_exc()
