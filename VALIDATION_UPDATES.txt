@@ -1,0 +1,79 @@
+================================================================================
+VALIDATION UPDATES - PASSWORD & PHONE NUMBER
+================================================================================
+
+✅ CHANGES COMPLETED:
+
+1. PASSWORD LENGTH UPDATED
+   - Minimum password length: 8 → 6 characters
+   - Updated in:
+     ✓ RegistrationForm
+     ✓ ResetPasswordForm
+     ✓ ChangePasswordForm
+   - JavaScript strength indicator updated (checks for 6+ characters)
+
+2. OTP FIELDS REMOVED
+   - Removed OTP input from ResetPasswordForm
+   - Removed OTP auto-focus JavaScript code
+   - Password reset now simplified (admin-managed)
+
+3. PHONE NUMBER COLLECTION
+   - Phone NOT collected at user registration
+   - Phone collected ONLY at:
+     ✓ Donor profile registration
+     ✓ Patient profile registration
+   - Phone formatting JavaScript remains for donor/patient forms
+
+================================================================================
+
+📋 VALIDATION RULES:
+
+USER REGISTRATION:
+  - Email: Required, valid format
+  - Password: Minimum 6 characters
+  - No phone number required
+
+DONOR/PATIENT REGISTRATION:
+  - Full name: Required
+  - Phone: Required (with formatting)
+  - Blood group: Required
+  - Other profile details: Required
+
+PASSWORD STRENGTH INDICATOR:
+  - Weak: < 6 characters
+  - Fair: 6+ characters
+  - Good: 6+ chars + mixed case
+  - Strong: 6+ chars + mixed case + numbers + special chars
+
+================================================================================
+
+🔐 FORMS UPDATED:
+
+1. RegistrationForm
+   - Email only (no phone)
+   - Password min 6 chars
+
+2. LoginForm
+   - Email + password
+   - No OTP verification
+
+3. DonorRegistrationForm
+   - Includes phone field
+   - Phone formatted with JavaScript
+
+4. PatientRegistrationForm
+   - Includes phone field
+   - Phone formatted with JavaScript
+
+5. ResetPasswordForm
+   - Simplified (no OTP)
+   - Password min 6 chars
+
+6. ChangePasswordForm
+   - Current password
+   - New password min 6 chars
+
+================================================================================
+
+✅ STATUS: All validation updates complete and consistent across forms & JS
+

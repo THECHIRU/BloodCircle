@@ -5,7 +5,6 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
-from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from config import config
@@ -14,7 +13,6 @@ from config import config
 db = SQLAlchemy()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
-mail = Mail()
 migrate = Migrate()
 csrf = CSRFProtect()
 
@@ -38,7 +36,6 @@ def create_app(config_name='default'):
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
-    mail.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
     
@@ -66,28 +63,13 @@ def create_app(config_name='default'):
     # Register template filters
     register_template_filters(app)
     
-    # Initialize database and create tables on startup
+    # Initialize database tables on startup (tables only, admin is created in build script)
     with app.app_context():
         try:
             db.create_all()
-            
-            # Create admin if doesn't exist
-            from app.models import User
-            admin_email = 'chiranjeevi.kola@zohomail.in'
-            if not User.query.filter_by(email=admin_email).first():
-                admin = User(
-                    email=admin_email,
-                    phone=None,
-                    role='admin',
-                    is_verified=True,
-                    is_active=True
-                )
-                admin.set_password('g0abdkbxa6')
-                db.session.add(admin)
-                db.session.commit()
-                print("Admin account created")
+            print("Database tables initialized successfully")
         except Exception as e:
-            print(f"Database init: {e}")
+            print(f"Note: Database initialization during startup: {e}")
     
     return app
 

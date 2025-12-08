@@ -6,12 +6,11 @@ from flask_login import login_user, logout_user, current_user, login_required
 from datetime import datetime
 from app import db
 from app.auth import auth_bp
-from app.models import User, OTP
+from app.models import User
 from app.forms import (
-    RegistrationForm, LoginForm, OTPVerificationForm,
+    RegistrationForm, LoginForm,
     ForgotPasswordForm, ResetPasswordForm
 )
-from app.utils import create_and_send_otp, verify_otp
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -68,53 +67,6 @@ def register():
     return render_template('auth/register.html', form=form, title='Register')
 
 
-@auth_bp.route('/verify-otp', methods=['GET', 'POST'])
-def verify_otp_route():
-    """Verify OTP after registration."""
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    
-    # Check if user has a pending verification
-    user_id = session.get('pending_user_id')
-    email = session.get('pending_email')
-    
-    if not user_id or not email:
-        flash('No pending verification found. Please register first.', 'warning')
-        return redirect(url_for('auth.register'))
-    
-    form = OTPVerificationForm()
-    
-    if form.validate_on_submit():
-        # Verify OTP
-        success, message, otp_record = verify_otp(
-            otp_code=form.otp.data,
-            user_id=user_id,
-            email=email,
-            otp_type='email'
-        )
-        
-        if success:
-            # Mark user as verified
-            user = User.query.get(user_id)
-            if user:
-                user.is_verified = True
-                db.session.commit()
-                
-                # Clear session
-                session.pop('pending_user_id', None)
-                session.pop('pending_email', None)
-                session.pop('pending_phone', None)
-                
-                flash('Account verified successfully! Please complete your profile.', 'success')
-                
-                # Redirect to role selection or profile creation
-                return redirect(url_for('auth.select_role'))
-        else:
-            flash(message, 'danger')
-    
-    return render_template('auth/verify_otp.html', form=form, email=email, title='Verify OTP')
-
-
 @auth_bp.route('/select-role')
 @login_required
 def select_role():
@@ -137,69 +89,6 @@ def select_role():
     
     # User has no role yet - show role selection page
     return render_template('auth/select_role.html', title='Select Role')
-
-
-@auth_bp.route('/resend-otp', methods=['POST', 'GET'])
-def resend_otp():
-    """Resend OTP to user."""
-    user_id = session.get('pending_user_id')
-    email = session.get('pending_email')
-    phone = session.get('pending_phone')
-    
-    if not user_id or not email:
-        flash('No pending verification found. Please register first.', 'warning')
-        return redirect(url_for('auth.register'))
-    
-    try:
-        success, message = create_and_send_otp(
-            user_id=user_id,
-            email=email,
-            phone=phone,
-            otp_type='email',
-            user_name='User'
-        )
-        
-        if success:
-            flash('OTP has been resent to your email. Please check your inbox (and spam folder).', 'success')
-        else:
-            flash(f'Failed to resend OTP: {message}. Please try again or contact support.', 'danger')
-    except Exception as e:
-        flash(f'Error resending OTP: {str(e)}. Please try again.', 'danger')
-    
-    return redirect(url_for('auth.verify_otp_route'))
-
-
-@auth_bp.route('/resend-reset-otp', methods=['POST', 'GET'])
-def resend_reset_otp():
-    """Resend OTP for password reset."""
-    email = session.get('reset_email')
-    
-    if not email:
-        flash('Please request a password reset first.', 'warning')
-        return redirect(url_for('auth.forgot_password'))
-    
-    user = User.query.filter_by(email=email).first()
-    
-    if not user:
-        flash('Invalid session. Please try again.', 'danger')
-        return redirect(url_for('auth.forgot_password'))
-    
-    # Send OTP
-    success, message = create_and_send_otp(
-        user_id=user.id,
-        email=user.email,
-        otp_type='password_reset',
-        user_name=user.donor.full_name if user.donor else (
-            user.patient.full_name if user.patient else 'User'
-        )
-    )
-    
-    if success:
-        flash('OTP resent successfully! Check console for OTP code.', 'success')
-    else:
-        flash(f'Failed to resend OTP: {message}', 'danger')
-    
-    return redirect(url_for('auth.reset_password'))
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -311,7 +200,7 @@ def login():
 
 @auth_bp.route('/admin-login', methods=['GET', 'POST'])
 def admin_login():
-    """Enhanced admin login - requires email AND phone verification with OTP."""
+    """Admin login with email and password only."""
     if current_user.is_authenticated and current_user.role == 'admin':
         return redirect(url_for('admin.dashboard'))
     
@@ -322,41 +211,32 @@ def admin_login():
         user = User.query.filter_by(email=form.email.data.lower()).first()
         
         if not user:
-            flash('Email address not found. Please check your email.', 'danger')
+            flash('Invalid credentials.', 'danger')
             return redirect(url_for('auth.admin_login'))
         
-        if user and user.role == 'admin':
-            if not user.check_password(form.password.data):
-                flash('Invalid credentials.', 'danger')
-                return redirect(url_for('auth.admin_login'))
-            
-            if user.is_blocked:
-                flash('Your account has been blocked.', 'danger')
-                return redirect(url_for('auth.admin_login'))
-            
-            if user.deleted_at:
-                flash('Your account has been deleted.', 'danger')
-                return redirect(url_for('auth.admin_login'))
-            
-            # Send OTP to email only
-            from app.utils import send_otp_for_login
-            
-            # Send email OTP
-            email_success, email_msg, _ = send_otp_for_login(user_id=user.id, email=user.email, otp_type='email')
-            
-            if email_success:
-                # Store login details in session
-                session['login_user_id'] = user.id
-                session['login_otp_type'] = 'email'
-                session['remember_me'] = form.remember_me.data
-                session['admin_login'] = True
-                
-                flash(f'OTP sent to {user.email}', 'success')
-                return redirect(url_for('auth.verify_admin_login_otp'))
-            else:
-                flash(f'Failed to send OTP: {email_msg}', 'danger')
-        else:
-            flash('Invalid admin credentials.', 'danger')
+        if user.role != 'admin':
+            flash('Invalid credentials.', 'danger')
+            return redirect(url_for('auth.admin_login'))
+        
+        if not user.check_password(form.password.data):
+            flash('Invalid credentials.', 'danger')
+            return redirect(url_for('auth.admin_login'))
+        
+        if user.is_blocked:
+            flash('Your account has been blocked.', 'danger')
+            return redirect(url_for('auth.admin_login'))
+        
+        if user.deleted_at:
+            flash('Your account has been deleted.', 'danger')
+            return redirect(url_for('auth.admin_login'))
+        
+        # Direct login without OTP
+        login_user(user, remember=form.remember_me.data)
+        user.last_login = datetime.utcnow()
+        db.session.commit()
+        
+        flash('Welcome back, Admin!', 'success')
+        return redirect(url_for('admin.dashboard'))
     
     return render_template('auth/admin_login.html', form=form, title='Admin Login')
 
@@ -395,16 +275,8 @@ def sub_admin_login():
             user.last_login = datetime.utcnow()
             db.session.commit()
             
-            from app.utils import send_login_notification
-            user_name = user.donor.full_name if user.donor else (user.patient.full_name if user.patient else 'Sub-Admin')
-            send_login_notification(
-                user_email=user.email,
-                user_role=user.role,
-                user_name=user_name,
-                login_time=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
-                ip_address=request.remote_addr,
-                user_agent=request.user_agent.string[:100]
-            )
+            # Email notifications disabled
+            current_app.logger.info(f"Sub-admin login: {user.email}")
             
             flash('Login successful!', 'success')
             return redirect(url_for('admin.sub_admin_dashboard'))
@@ -414,137 +286,7 @@ def sub_admin_login():
     return render_template('auth/login.html', form=form, title='Sub-Admin Login')
 
 
-@auth_bp.route('/verify-login-otp', methods=['GET', 'POST'])
-def verify_login_otp():
-    """Verify OTP for sub-admin login."""
-    user_id = session.get('login_user_id')
-    otp_type = session.get('login_otp_type', 'email')
-    
-    if not user_id:
-        flash('No pending login verification. Please login again.', 'warning')
-        return redirect(url_for('auth.sub_admin_login'))
-    
-    from app.forms import LoginOTPForm
-    form = LoginOTPForm()
-    
-    if form.validate_on_submit():
-        from app.utils import verify_login_otp as verify_otp_func
-        success, message, _ = verify_otp_func(otp_code=form.otp.data, user_id=user_id, otp_type=otp_type)
-        
-        if success:
-            user = User.query.get(user_id)
-            if user:
-                remember = session.get('remember_me', False)
-                login_user(user, remember=remember)
-                user.last_login = datetime.utcnow()
-                db.session.commit()
-                
-                from app.utils import send_login_notification
-                user_name = user.donor.full_name if user.donor else (user.patient.full_name if user.patient else 'Sub-Admin')
-                send_login_notification(
-                    user_email=user.email,
-                    user_role=user.role,
-                    user_name=user_name,
-                    login_time=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
-                    ip_address=request.remote_addr,
-                    user_agent=request.user_agent.string[:100]
-                )
-                
-                session.pop('login_user_id', None)
-                session.pop('login_otp_type', None)
-                session.pop('remember_me', None)
-                
-                flash('Login successful!', 'success')
-                return redirect(url_for('admin.sub_admin_dashboard'))
-        else:
-            flash(f'OTP verification failed: {message}', 'danger')
-    
-    user = User.query.get(user_id)
-    contact_info = user.email if otp_type == 'email' else user.phone
-    
-    return render_template('auth/verify_login_otp.html', form=form, 
-                         contact_info=contact_info, otp_type=otp_type, title='Verify Login OTP')
 
-
-@auth_bp.route('/resend-admin-login-otp', methods=['POST', 'GET'])
-def resend_admin_login_otp():
-    """Resend OTP for admin login."""
-    user_id = session.get('login_user_id')
-    is_admin = session.get('admin_login', False)
-    
-    if not user_id or not is_admin:
-        flash('No pending login verification. Please login again.', 'warning')
-        return redirect(url_for('auth.admin_login'))
-    
-    user = User.query.get(user_id)
-    if not user:
-        flash('User not found.', 'danger')
-        return redirect(url_for('auth.admin_login'))
-    
-    from app.utils import send_otp_for_login
-    success, message = send_otp_for_login(user=user, otp_type='email', purpose='login verification')
-    
-    if success:
-        flash('New OTP sent successfully to your email!', 'success')
-    else:
-        flash(f'Failed to resend OTP: {message}', 'danger')
-    
-    return redirect(url_for('auth.verify_admin_login_otp'))
-
-
-@auth_bp.route('/verify-admin-login-otp', methods=['GET', 'POST'])
-def verify_admin_login_otp():
-    """Verify OTP for admin login - email OTP only."""
-    user_id = session.get('login_user_id')
-    is_admin = session.get('admin_login', False)
-    
-    if not user_id or not is_admin:
-        flash('No pending login verification. Please login again.', 'warning')
-        return redirect(url_for('auth.admin_login'))
-    
-    from app.forms import LoginOTPForm
-    form = LoginOTPForm()
-    
-    if form.validate_on_submit():
-        from app.utils import verify_login_otp as verify_otp_func
-        
-        # Verify email OTP
-        email_success, email_msg, _ = verify_otp_func(otp_code=form.otp.data, user_id=user_id, otp_type='email')
-        
-        if email_success:
-            user = User.query.get(user_id)
-            if user:
-                remember = session.get('remember_me', False)
-                login_user(user, remember=remember)
-                user.last_login = datetime.utcnow()
-                db.session.commit()
-                
-                from app.utils import send_login_notification
-                user_name = user.donor.full_name if user.donor else (user.patient.full_name if user.patient else 'Admin')
-                send_login_notification(
-                    user_email=user.email,
-                    user_role=user.role,
-                    user_name=user_name,
-                    login_time=datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
-                    ip_address=request.remote_addr,
-                    user_agent=request.user_agent.string[:100]
-                )
-                
-                session.pop('login_user_id', None)
-                session.pop('login_otp_type', None)
-                session.pop('remember_me', None)
-                session.pop('admin_login', None)
-                
-                flash('Admin login successful!', 'success')
-                return redirect(url_for('admin.dashboard'))
-        else:
-            flash(f'OTP verification failed: {email_msg}', 'danger')
-    
-    user = User.query.get(user_id)
-    
-    return render_template('auth/verify_login_otp.html', form=form, 
-                         contact_info=user.email, otp_type='email', 
-                         title='Verify Admin Login OTP', is_admin_login=True)
 
 
 @auth_bp.route('/logout')
@@ -557,105 +299,18 @@ def logout():
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    """Forgot password - request OTP."""
+    """Forgot password - disabled for security. Contact admin."""
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
     
-    form = ForgotPasswordForm()
-    
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data.lower()).first()
-        
-        if user:
-            # Check if user is verified
-            if not user.is_verified:
-                flash('This account is not verified yet. Please verify your account first or contact support.', 'warning')
-                return redirect(url_for('auth.forgot_password'))
-            
-            # Check if user is blocked
-            if user.is_blocked:
-                flash('This account has been blocked. Please contact support.', 'danger')
-                return redirect(url_for('auth.forgot_password'))
-            
-            # Check if user is deleted
-            if user.deleted_at:
-                flash('This account has been deleted. Please contact support if you need assistance.', 'danger')
-                return redirect(url_for('auth.forgot_password'))
-            
-            # Check if user is active
-            if not user.is_active:
-                flash('This account is not active. Please contact support.', 'danger')
-                return redirect(url_for('auth.forgot_password'))
-            
-            # Store email in session
-            session['reset_email'] = user.email
-            
-            # Send OTP
-            success, message = create_and_send_otp(
-                user_id=user.id,
-                email=user.email,
-                otp_type='password_reset',
-                user_name=user.donor.full_name if user.donor else (
-                    user.patient.full_name if user.patient else 'User'
-                )
-            )
-            
-            if success:
-                flash('Password reset OTP sent to your email.', 'success')
-                return redirect(url_for('auth.reset_password'))
-            else:
-                flash(f'Failed to send OTP: {message}', 'danger')
-        else:
-            # Don't reveal if email exists or not (security)
-            flash('If an account exists with this email, you will receive a password reset OTP.', 'info')
-            return redirect(url_for('auth.login'))
-    
-    return render_template('auth/forgot_password.html', form=form, title='Forgot Password')
+    flash('Password reset is disabled. Please contact administrator for assistance.', 'info')
+    return redirect(url_for('auth.login'))
 
 
 @auth_bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
-    """Reset password with OTP."""
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    
-    email = session.get('reset_email')
-    
-    if not email:
-        flash('Please request a password reset first.', 'warning')
-        return redirect(url_for('auth.forgot_password'))
-    
-    form = ResetPasswordForm()
-    
-    if form.validate_on_submit():
-        # Verify OTP
-        user = User.query.filter_by(email=email).first()
-        
-        if not user:
-            flash('Invalid session. Please try again.', 'danger')
-            return redirect(url_for('auth.forgot_password'))
-        
-        success, message, otp_record = verify_otp(
-            otp_code=form.otp.data,
-            user_id=user.id,
-            email=email,
-            otp_type='password_reset'
-        )
-        
-        if success:
-            # Reset password
-            user.set_password(form.password.data)
-            db.session.commit()
-            
-            # Clear session
-            session.pop('reset_email', None)
-            
-            flash('Password reset successfully! Please login with your new password.', 'success')
-            return redirect(url_for('auth.login'))
-        else:
-            flash(message, 'danger')
-    
-    return render_template('auth/reset_password.html', form=form, email=email, title='Reset Password')
+    """Password reset - disabled."""
+    return redirect(url_for('auth.forgot_password'))
 
 
 @auth_bp.route('/delete-account', methods=['POST'])

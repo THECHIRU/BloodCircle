@@ -51,28 +51,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // OTP input auto-focus
-    const otpInput = document.getElementById('otp');
-    if (otpInput) {
-        otpInput.addEventListener('input', function(e) {
-            // Only allow numbers
-            this.value = this.value.replace(/[^0-9]/g, '');
-            
-            // Auto-submit when 6 digits are entered
-            if (this.value.length === 6) {
-                // Optional: Auto-submit form
-                // this.closest('form').submit();
-            }
-        });
-    }
-
-    // Phone number formatting
+    // Phone number formatting (for donor/patient registration only)
     const phoneInputs = document.querySelectorAll('input[type="tel"]');
     phoneInputs.forEach(input => {
         input.addEventListener('input', function(e) {
             // Remove non-numeric characters except + at the start
             let value = this.value.replace(/[^\d+]/g, '');
-            if (value.length > 1) {
+            if (value.length > 1 && value.startsWith('+')) {
                 value = value.replace(/\+/g, '');
                 value = '+' + value;
             }
@@ -80,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Password strength indicator
+    // Password strength indicator (minimum 6 characters)
     const passwordInput = document.getElementById('password');
     if (passwordInput) {
         passwordInput.addEventListener('input', function() {
@@ -89,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (strengthBar) {
                 let strength = 0;
-                if (password.length >= 8) strength++;
+                if (password.length >= 6) strength++;
                 if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
                 if (/\d/.test(password)) strength++;
                 if (/[^a-zA-Z\d]/.test(password)) strength++;

@@ -3,8 +3,8 @@ services:
     name: blood-donation-network
     env: python
     plan: free
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn run:app"
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 run:app"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -16,26 +16,9 @@ services:
         fromDatabase:
           name: blood-donation-db
           property: connectionString
-      - key: MAIL_SERVER
-        sync: false
-      - key: MAIL_PORT
-        value: 587
-      - key: MAIL_USE_TLS
-        value: true
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
-      - key: TWILIO_ACCOUNT_SID
-        sync: false
-      - key: TWILIO_AUTH_TOKEN
-        sync: false
-      - key: TWILIO_PHONE_NUMBER
-        sync: false
-      - key: OTP_EXPIRY_MINUTES
+      - key: ITEMS_PER_PAGE
         value: 10
-      - key: MAX_OTP_REQUESTS_PER_HOUR
-        value: 3
+    healthCheckPath: /
 
 databases:
   - name: blood-donation-db

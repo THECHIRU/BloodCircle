@@ -35,23 +35,6 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # Flask-Mail Configuration
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', os.environ.get('MAIL_USERNAME'))
-    
-    # Twilio Configuration
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
-    
-    # OTP Configuration
-    OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 10))
-    MAX_OTP_REQUESTS_PER_HOUR = int(os.environ.get('MAX_OTP_REQUESTS_PER_HOUR', 3))
-    
     # Pagination
     ITEMS_PER_PAGE = int(os.environ.get('ITEMS_PER_PAGE', 10))
     
@@ -79,6 +62,17 @@ class ProductionConfig(Config):
     SECRET_KEY = os.environ.get('SECRET_KEY')
     if not SECRET_KEY:
         raise ValueError("SECRET_KEY environment variable must be set in production")
+    
+    # Ensure proper PostgreSQL connection pooling for Render
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 5,
+        'max_overflow': 10,
+        'pool_recycle': 300,
+        'pool_pre_ping': True,
+        'connect_args': {
+            'connect_timeout': 10,
+        }
+    }
 
 
 class TestingConfig(Config):

@@ -1,7 +1,7 @@
 """
 Admin routes for dashboard, user management, and CRUD operations.
 """
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 from sqlalchemy import func
@@ -9,7 +9,7 @@ from app import db
 from app.admin import admin_bp
 from app.models import User, Donor, Patient, Feedback
 from app.forms import AdminFeedbackResponseForm
-from app.utils import get_blood_group_statistics, send_notification_email
+from app.utils import get_blood_group_statistics
 from functools import wraps
 
 
@@ -311,20 +311,8 @@ def respond_feedback(feedback_id):
         feedback.resolved_at = datetime.utcnow()
         db.session.commit()
         
-        # Send email response
-        subject = f"Re: {feedback.subject}"
-        body = f"""
-Dear {feedback.name},
-
-Thank you for your feedback regarding: {feedback.subject}
-
-Admin Response:
-{feedback.admin_response}
-
-Best regards,
-BloodCircle Team
-        """
-        send_notification_email(feedback.email, subject, body)
+        # Email notification disabled (response saved in database)
+        current_app.logger.info(f"Feedback {feedback.id} responded to: {feedback.email}")
         
         flash('Response sent successfully!', 'success')
         return redirect(url_for('admin.manage_feedback'))

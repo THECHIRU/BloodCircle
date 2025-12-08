@@ -5,8 +5,8 @@ import os
 from app import create_app, db
 from app.models import User, Donor, Patient, Feedback, OTP
 
-# Get configuration from environment variable, default to development
-config_name = os.environ.get('FLASK_ENV', 'development')
+# Get configuration from environment variable, default to production for safety
+config_name = os.environ.get('FLASK_ENV', 'production')
 app = create_app(config_name)
 
 

@@ -22,7 +22,7 @@ class RegistrationForm(FlaskForm):
     ])
     password = PasswordField('Password', validators=[
         DataRequired(message='Password is required'),
-        Length(min=8, message='Password must be at least 8 characters long')
+        Length(min=6, message='Password must be at least 6 characters long')
     ])
     confirm_password = PasswordField('Confirm Password', validators=[
         DataRequired(message='Please confirm your password'),
@@ -80,13 +80,9 @@ class ForgotPasswordForm(FlaskForm):
 
 class ResetPasswordForm(FlaskForm):
     """Reset password form."""
-    otp = StringField('OTP Code', validators=[
-        DataRequired(message='OTP is required'),
-        Length(min=6, max=6, message='OTP must be 6 digits')
-    ])
     password = PasswordField('New Password', validators=[
         DataRequired(message='Password is required'),
-        Length(min=8, message='Password must be at least 8 characters long')
+        Length(min=6, message='Password must be at least 6 characters long')
     ])
     confirm_password = PasswordField('Confirm New Password', validators=[
         DataRequired(message='Please confirm your password'),
@@ -330,7 +326,7 @@ class ChangePasswordForm(FlaskForm):
     ])
     new_password = PasswordField('New Password', validators=[
         DataRequired(message='New password is required'),
-        Length(min=8, message='Password must be at least 8 characters long')
+        Length(min=6, message='Password must be at least 6 characters long')
     ])
     confirm_new_password = PasswordField('Confirm New Password', validators=[
         DataRequired(message='Please confirm your new password'),
