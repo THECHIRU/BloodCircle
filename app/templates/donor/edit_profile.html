@@ -27,19 +27,22 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="address" class="form-label">{{ form.address.label }}</label>
-                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else "")) }}
-                            {% if form.address.errors %}
+                            <label for="phone" class="form-label">{{ form.phone.label }}</label>
+                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="e.g., +91 9876543210") }}
+                            {% if form.phone.errors %}
                                 <div class="invalid-feedback">
-                                    {% for error in form.address.errors %}
+                                    {% for error in form.phone.errors %}
                                         {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Patients will use this number to contact you.
+                            </small>
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="city" class="form-label">{{ form.city.label }}</label>
                                 {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
                                 {% if form.city.errors %}
@@ -51,7 +54,7 @@
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="state" class="form-label">{{ form.state.label }}</label>
                                 {{ form.state(class="form-control" + (" is-invalid" if form.state.errors else "")) }}
                                 {% if form.state.errors %}
@@ -62,12 +65,11 @@
                                     </div>
                                 {% endif %}
                             </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="pincode" class="form-label">{{ form.pincode.label }}</label>
-                            {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else "")) }}
-                            {% if form.pincode.errors %}
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="pincode" class="form-label">{{ form.pincode.label }}</label>
+                                {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else "")) }}
+                                {% if form.pincode.errors %}
                                 <div class="invalid-feedback">
                                     {% for error in form.pincode.errors %}
                                         {{ error }}

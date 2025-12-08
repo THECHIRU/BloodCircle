@@ -41,15 +41,18 @@
                         </div>
                         
                         <div class="mb-3">
-                            {{ form.location.label(class="form-label") }}
-                            {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else "")) }}
-                            {% if form.location.errors %}
-                                <div class="invalid-feedback">{{ form.location.errors[0] }}</div>
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control", placeholder="e.g., +91 9876543210") }}
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback">{{ form.phone.errors[0] }}</div>
                             {% endif %}
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Donors will use this number to contact you.
+                            </small>
                         </div>
                         
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 {{ form.city.label(class="form-label") }}
                                 {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
                                 {% if form.city.errors %}
@@ -57,11 +60,19 @@
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 {{ form.state.label(class="form-label") }}
                                 {{ form.state(class="form-control" + (" is-invalid" if form.state.errors else "")) }}
                                 {% if form.state.errors %}
                                     <div class="invalid-feedback">{{ form.state.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.pincode.label(class="form-label") }}
+                                {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else "")) }}
+                                {% if form.pincode.errors %}
+                                    <div class="invalid-feedback">{{ form.pincode.errors[0] }}</div>
                                 {% endif %}
                             </div>
                         </div>
