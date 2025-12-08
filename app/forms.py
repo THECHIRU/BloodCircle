@@ -169,8 +169,32 @@ class DonorProfileEditForm(FlaskForm):
         Length(min=2, max=100)
     ])
     phone = TelField('Phone Number', validators=[
-        Optional(),
+        DataRequired(message='Phone number is required'),
         Length(min=10, max=20, message='Invalid phone number')
+    ])
+    blood_group = SelectField('Blood Group', validators=[
+        DataRequired(message='Blood group is required')
+    ], choices=[
+        ('', 'Select Blood Group'),
+        ('A+', 'A+'),
+        ('A-', 'A-'),
+        ('B+', 'B+'),
+        ('B-', 'B-'),
+        ('O+', 'O+'),
+        ('O-', 'O-'),
+        ('AB+', 'AB+'),
+        ('AB-', 'AB-')
+    ])
+    date_of_birth = DateField('Date of Birth', validators=[
+        DataRequired(message='Date of birth is required')
+    ], format='%Y-%m-%d')
+    gender = SelectField('Gender', validators=[
+        DataRequired(message='Gender is required')
+    ], choices=[
+        ('', 'Select Gender'),
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other')
     ])
     city = StringField('City', validators=[
         DataRequired(message='City is required'),
@@ -191,6 +215,22 @@ class DonorProfileEditForm(FlaskForm):
                                     validators=[Optional(), Length(max=1000)])
     is_available = BooleanField('Available to Donate')
     submit = SubmitField('Update Profile')
+    
+    def validate_date_of_birth(self, field):
+        """Validate donor age (must be 18-65)."""
+        today = date.today()
+        age = today.year - field.data.year - (
+            (today.month, today.day) < (field.data.month, field.data.day)
+        )
+        if age < 18:
+            raise ValidationError('You must be at least 18 years old to donate blood.')
+        if age > 65:
+            raise ValidationError('Donors must be under 65 years old.')
+    
+    def validate_last_donation_date(self, field):
+        """Validate last donation date is not in future."""
+        if field.data and field.data > date.today():
+            raise ValidationError('Last donation date cannot be in the future.')
 
 
 class PatientRegistrationForm(FlaskForm):
@@ -246,6 +286,67 @@ class PatientRegistrationForm(FlaskForm):
     medical_condition = TextAreaField('Medical Condition (Optional)',
                                      validators=[Optional(), Length(max=1000)])
     submit = SubmitField('Complete Registration')
+    
+    def validate_required_by_date(self, field):
+        """Validate required date is not in past."""
+        if field.data < date.today():
+            raise ValidationError('Required by date cannot be in the past.')
+
+
+class PatientProfileEditForm(FlaskForm):
+    """Form for editing patient profile."""
+    full_name = StringField('Full Name', validators=[
+        DataRequired(message='Full name is required'),
+        Length(min=2, max=100)
+    ])
+    phone = TelField('Phone Number', validators=[
+        DataRequired(message='Phone number is required'),
+        Length(min=10, max=20, message='Invalid phone number')
+    ])
+    blood_group_required = SelectField('Blood Group Required', validators=[
+        DataRequired(message='Blood group is required')
+    ], choices=[
+        ('', 'Select Blood Group'),
+        ('A+', 'A+'),
+        ('A-', 'A-'),
+        ('B+', 'B+'),
+        ('B-', 'B-'),
+        ('O+', 'O+'),
+        ('O-', 'O-'),
+        ('AB+', 'AB+'),
+        ('AB-', 'AB-')
+    ])
+    hospital_name = StringField('Hospital Name', validators=[
+        DataRequired(message='Hospital name is required'),
+        Length(max=100)
+    ])
+    city = StringField('City', validators=[
+        DataRequired(message='City is required'),
+        Length(max=50)
+    ])
+    state = StringField('State', validators=[
+        DataRequired(message='State is required'),
+        Length(max=50)
+    ])
+    pincode = StringField('Pincode', validators=[
+        DataRequired(message='Pincode is required'),
+        Length(min=5, max=10, message='Invalid pincode')
+    ])
+    urgency_level = SelectField('Urgency Level', validators=[
+        DataRequired(message='Urgency level is required')
+    ], choices=[
+        ('', 'Select Urgency'),
+        ('Critical', 'Critical - Immediate Need'),
+        ('Urgent', 'Urgent - Within 24 Hours'),
+        ('Normal', 'Normal - Within a Week')
+    ])
+    required_by_date = DateField('Required By Date', validators=[
+        DataRequired(message='Required by date is needed')
+    ], format='%Y-%m-%d')
+    medical_condition = TextAreaField('Medical Condition (Optional)',
+                                     validators=[Optional(), Length(max=1000)])
+    is_fulfilled = BooleanField('Request Fulfilled')
+    submit = SubmitField('Update Profile')
     
     def validate_required_by_date(self, field):
         """Validate required date is not in past."""

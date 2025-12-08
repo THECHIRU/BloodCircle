@@ -43,6 +43,44 @@
                         
                         <div class="row">
                             <div class="col-md-4 mb-3">
+                                <label for="blood_group" class="form-label">{{ form.blood_group.label }}</label>
+                                {{ form.blood_group(class="form-select" + (" is-invalid" if form.blood_group.errors else "")) }}
+                                {% if form.blood_group.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.blood_group.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="date_of_birth" class="form-label">{{ form.date_of_birth.label }}</label>
+                                {{ form.date_of_birth(class="form-control" + (" is-invalid" if form.date_of_birth.errors else "")) }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.date_of_birth.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="gender" class="form-label">{{ form.gender.label }}</label>
+                                {{ form.gender(class="form-select" + (" is-invalid" if form.gender.errors else "")) }}
+                                {% if form.gender.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.gender.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
                                 <label for="city" class="form-label">{{ form.city.label }}</label>
                                 {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
                                 {% if form.city.errors %}

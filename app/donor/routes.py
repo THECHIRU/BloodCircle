@@ -157,6 +157,9 @@ def edit_profile():
         
         donor.full_name = form.full_name.data
         donor.phone = form.phone.data
+        donor.blood_group = form.blood_group.data
+        donor.date_of_birth = form.date_of_birth.data
+        donor.gender = form.gender.data
         donor.city = form.city.data
         donor.state = form.state.data
         donor.pincode = form.pincode.data
@@ -179,6 +182,9 @@ def edit_profile():
     if request.method == 'GET':
         form.full_name.data = donor.full_name
         form.phone.data = donor.phone
+        form.blood_group.data = donor.blood_group
+        form.date_of_birth.data = donor.date_of_birth
+        form.gender.data = donor.gender
         form.city.data = donor.city
         form.state.data = donor.state
         form.pincode.data = donor.pincode

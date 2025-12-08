@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center fw-bold mb-4">
+                        <i class="fas fa-user-edit text-primary me-2"></i>Edit Profile
+                    </h2>
+                    <p class="text-center text-muted mb-4">Update your blood request information</p>
+                    
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.full_name.label(class="form-label") }}
+                                {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+                                {% if form.full_name.errors %}
+                                    <div class="invalid-feedback">{{ form.full_name.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.phone.label(class="form-label") }}
+                                {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="e.g., +91 9876543210") }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback">{{ form.phone.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.blood_group_required.label(class="form-label") }}
+                                {{ form.blood_group_required(class="form-select" + (" is-invalid" if form.blood_group_required.errors else "")) }}
+                                {% if form.blood_group_required.errors %}
+                                    <div class="invalid-feedback">{{ form.blood_group_required.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.hospital_name.label(class="form-label") }}
+                                {{ form.hospital_name(class="form-control" + (" is-invalid" if form.hospital_name.errors else "")) }}
+                                {% if form.hospital_name.errors %}
+                                    <div class="invalid-feedback">{{ form.hospital_name.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.city.label(class="form-label") }}
+                                {{ form.city(class="form-control" + (" is-invalid" if form.city.errors else "")) }}
+                                {% if form.city.errors %}
+                                    <div class="invalid-feedback">{{ form.city.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.state.label(class="form-label") }}
+                                {{ form.state(class="form-control" + (" is-invalid" if form.state.errors else "")) }}
+                                {% if form.state.errors %}
+                                    <div class="invalid-feedback">{{ form.state.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.pincode.label(class="form-label") }}
+                                {{ form.pincode(class="form-control" + (" is-invalid" if form.pincode.errors else "")) }}
+                                {% if form.pincode.errors %}
+                                    <div class="invalid-feedback">{{ form.pincode.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.urgency_level.label(class="form-label") }}
+                                {{ form.urgency_level(class="form-select" + (" is-invalid" if form.urgency_level.errors else "")) }}
+                                {% if form.urgency_level.errors %}
+                                    <div class="invalid-feedback">{{ form.urgency_level.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.required_by_date.label(class="form-label") }}
+                                {{ form.required_by_date(class="form-control" + (" is-invalid" if form.required_by_date.errors else "")) }}
+                                {% if form.required_by_date.errors %}
+                                    <div class="invalid-feedback">{{ form.required_by_date.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.medical_condition.label(class="form-label") }}
+                            {{ form.medical_condition(class="form-control", rows=4) }}
+                            {% if form.medical_condition.errors %}
+                                <div class="invalid-feedback">{{ form.medical_condition.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_fulfilled(class="form-check-input") }}
+                                {{ form.is_fulfilled.label(class="form-check-label") }}
+                            </div>
+                            <small class="text-muted">Check this if you have received the blood donation</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                            <a href="{{ url_for('patient.profile') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

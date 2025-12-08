@@ -7,7 +7,7 @@ from datetime import datetime
 from app import db
 from app.patient import patient_bp
 from app.models import Patient, Donor, User, get_compatible_blood_groups
-from app.forms import PatientRegistrationForm, SearchDonorForm
+from app.forms import PatientRegistrationForm, PatientProfileEditForm, SearchDonorForm
 from functools import wraps
 
 
@@ -237,3 +237,50 @@ def profile():
         compatible_groups=compatible_groups,
         title='My Profile'
     )
+
+
+@patient_bp.route('/edit-profile', methods=['GET', 'POST'])
+@patient_required
+def edit_profile():
+    """Edit patient profile."""
+    patient = current_user.patient
+    
+    if not patient:
+        flash('Please complete your patient profile first.', 'warning')
+        return redirect(url_for('patient.register'))
+    
+    form = PatientProfileEditForm()
+    
+    if form.validate_on_submit():
+        patient.full_name = form.full_name.data
+        patient.phone = form.phone.data
+        patient.blood_group_required = form.blood_group_required.data
+        patient.hospital_name = form.hospital_name.data
+        patient.city = form.city.data
+        patient.state = form.state.data
+        patient.pincode = form.pincode.data
+        patient.urgency_level = form.urgency_level.data
+        patient.required_by_date = form.required_by_date.data
+        patient.medical_condition = form.medical_condition.data
+        patient.is_fulfilled = form.is_fulfilled.data
+        patient.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('patient.profile'))
+    
+    # Pre-populate form
+    if request.method == 'GET':
+        form.full_name.data = patient.full_name
+        form.phone.data = patient.phone
+        form.blood_group_required.data = patient.blood_group_required
+        form.hospital_name.data = patient.hospital_name
+        form.city.data = patient.city
+        form.state.data = patient.state
+        form.pincode.data = patient.pincode
+        form.urgency_level.data = patient.urgency_level
+        form.required_by_date.data = patient.required_by_date
+        form.medical_condition.data = patient.medical_condition
+        form.is_fulfilled.data = patient.is_fulfilled
+    
+    return render_template('patient/edit_profile.html', form=form, patient=patient, title='Edit Profile')
