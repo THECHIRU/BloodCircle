@@ -13,8 +13,9 @@
                 <div class="col-md-6">
                     <label for="search" class="form-label">Search</label>
                     <input type="text" class="form-control" id="search" name="search" 
-                           placeholder="Search by name, phone, email, or ID..." 
+                           placeholder="Examples: id-7, name-john, email-test@gmail.com, phone-9876543210" 
                            value="{{ search_query }}">
+                    <small class="text-muted">Use prefixes: id-, name-, email-, phone- (default: email)</small>
                 </div>
                 <div class="col-md-3">
                     <label for="role_filter" class="form-label">Role</label>
@@ -65,6 +66,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% if users %}
                         {% for user in users %}
                         <tr>
                             <td>{{ user.id }}</td>
@@ -132,6 +134,18 @@
                             </td>
                         </tr>
                         {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-exclamation-triangle"></i> No users found matching your search.
+                                    {% if search_query %}
+                                    <br><small>Try: id-7, name-john, email-user@email.com, or phone-9876543210</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>

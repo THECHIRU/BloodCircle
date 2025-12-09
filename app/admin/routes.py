@@ -105,13 +105,42 @@ def manage_users():
         query = query.filter_by(is_verified=False)
     
     if search_query:
-        search_filters = [User.email.ilike(f'%{search_query}%')]
-        # Only search phone if it's not null
-        search_filters.append(User.phone.ilike(f'%{search_query}%'))
-        # Exact ID match if search query is a number
-        if search_query.isdigit():
-            search_filters.append(User.id == int(search_query))
-        query = query.filter(db.or_(*search_filters))
+        search_query_lower = search_query.lower().strip()
+        
+        # Prefix-based search
+        if search_query_lower.startswith('id-'):
+            # Search by ID (exact match)
+            id_value = search_query[3:].strip()
+            if id_value.isdigit():
+                query = query.filter(User.id == int(id_value))
+            else:
+                query = query.filter(User.id == -1)  # No results
+        elif search_query_lower.startswith('name-'):
+            # Search by name (check donor/patient full_name)
+            name_value = search_query[5:].strip()
+            query = query.outerjoin(Donor).outerjoin(Patient).filter(
+                db.or_(
+                    Donor.full_name.ilike(f'%{name_value}%'),
+                    Patient.full_name.ilike(f'%{name_value}%')
+                )
+            )
+        elif search_query_lower.startswith('email-'):
+            # Search by email (partial match)
+            email_value = search_query[6:].strip()
+            query = query.filter(User.email.ilike(f'%{email_value}%'))
+        elif search_query_lower.startswith('phone-'):
+            # Search by phone (partial match)
+            phone_value = search_query[6:].strip()
+            query = query.outerjoin(Donor).outerjoin(Patient).filter(
+                db.or_(
+                    User.phone.ilike(f'%{phone_value}%'),
+                    Donor.phone.ilike(f'%{phone_value}%'),
+                    Patient.phone.ilike(f'%{phone_value}%')
+                )
+            )
+        else:
+            # Default: search by email
+            query = query.filter(User.email.ilike(f'%{search_query}%'))
     
     # Order by creation date (newest first)
     query = query.order_by(User.created_at.desc())
@@ -157,16 +186,32 @@ def manage_donors():
     if city_filter:
         query = query.filter(Donor.city.ilike(f'%{city_filter}%'))
     
-    # Search functionality
+    # Search functionality with prefix support
     if search_query:
-        search_filters = [
-            Donor.full_name.ilike(f'%{search_query}%'),
-            Donor.phone.ilike(f'%{search_query}%')
-        ]
-        # Exact ID match if search query is a number
-        if search_query.isdigit():
-            search_filters.append(Donor.id == int(search_query))
-        query = query.filter(db.or_(*search_filters))
+        search_query_lower = search_query.lower().strip()
+        
+        if search_query_lower.startswith('id-'):
+            # Search by ID (exact match)
+            id_value = search_query[3:].strip()
+            if id_value.isdigit():
+                query = query.filter(Donor.id == int(id_value))
+            else:
+                query = query.filter(Donor.id == -1)  # No results
+        elif search_query_lower.startswith('name-'):
+            # Search by name (partial match)
+            name_value = search_query[5:].strip()
+            query = query.filter(Donor.full_name.ilike(f'%{name_value}%'))
+        elif search_query_lower.startswith('email-'):
+            # Search by email (partial match via user relationship)
+            email_value = search_query[6:].strip()
+            query = query.join(User).filter(User.email.ilike(f'%{email_value}%'))
+        elif search_query_lower.startswith('phone-'):
+            # Search by phone (partial match)
+            phone_value = search_query[6:].strip()
+            query = query.filter(Donor.phone.ilike(f'%{phone_value}%'))
+        else:
+            # Default: search by email
+            query = query.join(User).filter(User.email.ilike(f'%{search_query}%'))
     
     # Order by creation date (newest first)
     query = query.order_by(Donor.created_at.desc())
@@ -218,16 +263,32 @@ def manage_patients():
     elif fulfillment_filter == 'pending':
         query = query.filter_by(is_fulfilled=False)
     
-    # Search functionality
+    # Search functionality with prefix support
     if search_query:
-        search_filters = [
-            Patient.full_name.ilike(f'%{search_query}%'),
-            Patient.phone.ilike(f'%{search_query}%')
-        ]
-        # Exact ID match if search query is a number
-        if search_query.isdigit():
-            search_filters.append(Patient.id == int(search_query))
-        query = query.filter(db.or_(*search_filters))
+        search_query_lower = search_query.lower().strip()
+        
+        if search_query_lower.startswith('id-'):
+            # Search by ID (exact match)
+            id_value = search_query[3:].strip()
+            if id_value.isdigit():
+                query = query.filter(Patient.id == int(id_value))
+            else:
+                query = query.filter(Patient.id == -1)  # No results
+        elif search_query_lower.startswith('name-'):
+            # Search by name (partial match)
+            name_value = search_query[5:].strip()
+            query = query.filter(Patient.full_name.ilike(f'%{name_value}%'))
+        elif search_query_lower.startswith('email-'):
+            # Search by email (partial match via user relationship)
+            email_value = search_query[6:].strip()
+            query = query.join(User).filter(User.email.ilike(f'%{email_value}%'))
+        elif search_query_lower.startswith('phone-'):
+            # Search by phone (partial match)
+            phone_value = search_query[6:].strip()
+            query = query.filter(Patient.phone.ilike(f'%{phone_value}%'))
+        else:
+            # Default: search by email
+            query = query.join(User).filter(User.email.ilike(f'%{search_query}%'))
     
     # Order by urgency and creation date
     query = query.order_by(Patient.urgency_level, Patient.created_at.desc())
