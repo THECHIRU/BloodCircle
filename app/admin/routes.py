@@ -108,6 +108,9 @@ def manage_users():
         search_filters = [User.email.ilike(f'%{search_query}%')]
         # Only search phone if it's not null
         search_filters.append(User.phone.ilike(f'%{search_query}%'))
+        # Exact ID match if search query is a number
+        if search_query.isdigit():
+            search_filters.append(User.id == int(search_query))
         query = query.filter(db.or_(*search_filters))
     
     # Order by creation date (newest first)
@@ -158,9 +161,11 @@ def manage_donors():
     if search_query:
         search_filters = [
             Donor.full_name.ilike(f'%{search_query}%'),
-            Donor.phone.ilike(f'%{search_query}%'),
-            Donor.id == int(search_query) if search_query.isdigit() else False
+            Donor.phone.ilike(f'%{search_query}%')
         ]
+        # Exact ID match if search query is a number
+        if search_query.isdigit():
+            search_filters.append(Donor.id == int(search_query))
         query = query.filter(db.or_(*search_filters))
     
     # Order by creation date (newest first)
@@ -217,9 +222,11 @@ def manage_patients():
     if search_query:
         search_filters = [
             Patient.full_name.ilike(f'%{search_query}%'),
-            Patient.phone.ilike(f'%{search_query}%'),
-            Patient.id == int(search_query) if search_query.isdigit() else False
+            Patient.phone.ilike(f'%{search_query}%')
         ]
+        # Exact ID match if search query is a number
+        if search_query.isdigit():
+            search_filters.append(Patient.id == int(search_query))
         query = query.filter(db.or_(*search_filters))
     
     # Order by urgency and creation date
