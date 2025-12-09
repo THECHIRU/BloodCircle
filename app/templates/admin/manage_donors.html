@@ -6,6 +6,50 @@
 <div class="container mt-4">
     <h2 class="mb-4"><i class="fas fa-hand-holding-heart"></i> Manage Donors</h2>
     
+    <!-- Search Bar -->
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.manage_donors') }}" class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Search by name, phone, or ID..." 
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="blood_group_filter" class="form-label">Blood Group</label>
+                    <select class="form-select" id="blood_group_filter" name="blood_group">
+                        <option value="all" {% if blood_group_filter == 'all' %}selected{% endif %}>All Groups</option>
+                        <option value="A+" {% if blood_group_filter == 'A+' %}selected{% endif %}>A+</option>
+                        <option value="A-" {% if blood_group_filter == 'A-' %}selected{% endif %}>A-</option>
+                        <option value="B+" {% if blood_group_filter == 'B+' %}selected{% endif %}>B+</option>
+                        <option value="B-" {% if blood_group_filter == 'B-' %}selected{% endif %}>B-</option>
+                        <option value="O+" {% if blood_group_filter == 'O+' %}selected{% endif %}>O+</option>
+                        <option value="O-" {% if blood_group_filter == 'O-' %}selected{% endif %}>O-</option>
+                        <option value="AB+" {% if blood_group_filter == 'AB+' %}selected{% endif %}>AB+</option>
+                        <option value="AB-" {% if blood_group_filter == 'AB-' %}selected{% endif %}>AB-</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="availability_filter" class="form-label">Availability</label>
+                    <select class="form-select" id="availability_filter" name="availability">
+                        <option value="all" {% if availability_filter == 'all' %}selected{% endif %}>All</option>
+                        <option value="available" {% if availability_filter == 'available' %}selected{% endif %}>Available</option>
+                        <option value="unavailable" {% if availability_filter == 'unavailable' %}selected{% endif %}>Unavailable</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{{ url_for('admin.manage_donors') }}" class="btn btn-secondary">
+                        <i class="fas fa-undo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <div class="card shadow">
         <div class="card-header bg-danger text-white">
             <h5 class="mb-0">All Donors</h5>

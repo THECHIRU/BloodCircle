@@ -138,6 +138,7 @@ def manage_donors():
     blood_group_filter = request.args.get('blood_group', 'all')
     availability_filter = request.args.get('availability', 'all')
     city_filter = request.args.get('city', '')
+    search_query = request.args.get('search', '')
     
     query = Donor.query
     
@@ -152,6 +153,15 @@ def manage_donors():
     
     if city_filter:
         query = query.filter(Donor.city.ilike(f'%{city_filter}%'))
+    
+    # Search functionality
+    if search_query:
+        search_filters = [
+            Donor.full_name.ilike(f'%{search_query}%'),
+            Donor.phone.ilike(f'%{search_query}%'),
+            Donor.id == int(search_query) if search_query.isdigit() else False
+        ]
+        query = query.filter(db.or_(*search_filters))
     
     # Order by creation date (newest first)
     query = query.order_by(Donor.created_at.desc())
@@ -171,6 +181,7 @@ def manage_donors():
         availability_filter=availability_filter,
         city_filter=city_filter,
         cities=cities,
+        search_query=search_query,
         title='Manage Donors'
     )
 
@@ -186,6 +197,7 @@ def manage_patients():
     blood_group_filter = request.args.get('blood_group', 'all')
     urgency_filter = request.args.get('urgency', 'all')
     fulfillment_filter = request.args.get('fulfillment', 'all')
+    search_query = request.args.get('search', '')
     
     query = Patient.query
     
@@ -201,6 +213,15 @@ def manage_patients():
     elif fulfillment_filter == 'pending':
         query = query.filter_by(is_fulfilled=False)
     
+    # Search functionality
+    if search_query:
+        search_filters = [
+            Patient.full_name.ilike(f'%{search_query}%'),
+            Patient.phone.ilike(f'%{search_query}%'),
+            Patient.id == int(search_query) if search_query.isdigit() else False
+        ]
+        query = query.filter(db.or_(*search_filters))
+    
     # Order by urgency and creation date
     query = query.order_by(Patient.urgency_level, Patient.created_at.desc())
     
@@ -214,6 +235,7 @@ def manage_patients():
         blood_group_filter=blood_group_filter,
         urgency_filter=urgency_filter,
         fulfillment_filter=fulfillment_filter,
+        search_query=search_query,
         title='Manage Patients'
     )
 
@@ -336,6 +358,25 @@ def resolve_feedback(feedback_id):
     db.session.commit()
     
     flash('Feedback marked as resolved.', 'success')
+    return redirect(url_for('admin.manage_feedback'))
+
+
+@admin_bp.route('/feedback/<int:feedback_id>/toggle-status', methods=['POST'])
+@admin_required
+def toggle_feedback_status(feedback_id):
+    """Toggle feedback resolved status."""
+    feedback = Feedback.query.get_or_404(feedback_id)
+    
+    feedback.is_resolved = not feedback.is_resolved
+    if feedback.is_resolved:
+        feedback.resolved_at = datetime.utcnow()
+    else:
+        feedback.resolved_at = None
+    
+    db.session.commit()
+    
+    status = "resolved" if feedback.is_resolved else "pending"
+    flash(f'Feedback marked as {status}.', 'success')
     return redirect(url_for('admin.manage_feedback'))
 
 

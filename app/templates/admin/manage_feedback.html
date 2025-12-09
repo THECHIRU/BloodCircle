@@ -6,57 +6,126 @@
 <div class="container mt-4">
     <h2 class="mb-4"><i class="fas fa-comments"></i> Manage Feedback</h2>
     
+    <!-- Filter Options -->
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.manage_feedback') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="status_filter" class="form-label">Status</label>
+                    <select class="form-select" id="status_filter" name="status" onchange="this.form.submit()">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Feedback</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resolved</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <div class="card shadow">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0">All Feedback</h5>
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">All Feedback ({{ pagination.total }} total)</h5>
         </div>
         <div class="card-body">
-            {% for feedback in feedbacks %}
-            <div class="card mb-3">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ feedback.name }}</strong>
-                            <small class="text-muted">({{ feedback.email }})</small>
+            {% if feedback_items %}
+                {% for feedback in feedback_items %}
+                <div class="card mb-3 {% if feedback.is_resolved %}border-success{% else %}border-warning{% endif %}">
+                    <div class="card-header {% if feedback.is_resolved %}bg-success text-white{% else %}bg-warning text-dark{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ feedback.name }}</strong>
+                                <small class="{% if feedback.is_resolved %}text-white{% else %}text-muted{% endif %}">({{ feedback.email }})</small>
+                                {% if feedback.rating %}
+                                    <span class="ms-2">
+                                        {% for i in range(feedback.rating) %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% endfor %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <span class="badge {% if feedback.is_resolved %}bg-dark{% else %}bg-danger{% endif %}">
+                                    {% if feedback.is_resolved %}Resolved{% else %}Pending{% endif %}
+                                </span>
+                                <small class="ms-2 {% if feedback.is_resolved %}text-white{% else %}text-muted{% endif %}">
+                                    {{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </div>
                         </div>
-                        <small class="text-muted">{{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Subject:</strong> {{ feedback.subject }}</p>
+                        <p><strong>Message:</strong><br>{{ feedback.message }}</p>
+                        
+                        {% if feedback.admin_response %}
+                            <div class="alert alert-info mt-3">
+                                <strong><i class="fas fa-reply"></i> Admin Response:</strong><br>
+                                {{ feedback.admin_response }}<br>
+                                <small class="text-muted">
+                                    {% if feedback.resolved_at %}
+                                        Responded at: {{ feedback.resolved_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group" role="group">
+                            {% if not feedback.is_resolved %}
+                                <a href="{{ url_for('admin.respond_feedback', feedback_id=feedback.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-reply"></i> Respond
+                                </a>
+                            {% endif %}
+                            
+                            <form method="POST" action="{{ url_for('admin.toggle_feedback_status', feedback_id=feedback.id) }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-sm {% if feedback.is_resolved %}btn-warning{% else %}btn-success{% endif %}">
+                                    <i class="fas fa-{% if feedback.is_resolved %}undo{% else %}check{% endif %}"></i>
+                                    Mark as {% if feedback.is_resolved %}Pending{% else %}Resolved{% endif %}
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <p><strong>Subject:</strong> {{ feedback.subject }}</p>
-                    <p><strong>Message:</strong><br>{{ feedback.message }}</p>
-                    
-                    {% if feedback.response %}
-                        <div class="alert alert-success">
-                            <strong>Admin Response:</strong><br>
-                            {{ feedback.response }}<br>
-                            <small class="text-muted">Responded at: {{ feedback.responded_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                        </div>
-                    {% else %}
-                        <form method="POST" action="{{ url_for('admin.respond_feedback', feedback_id=feedback.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <div class="mb-3">
-                                <label for="response" class="form-label">Admin Response</label>
-                                <textarea name="response" class="form-control" rows="3" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-reply"></i> Send Response
-                            </button>
-                        </form>
-                    {% endif %}
-                </div>
-                <div class="card-footer">
-                    <form method="POST" action="{{ url_for('admin.delete_feedback', feedback_id=feedback.id) }}" style="display:inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this feedback?')">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </form>
-                </div>
-            </div>
-            {% endfor %}
-            
-            {% if not feedbacks %}
+                {% endfor %}
+                
+                <!-- Pagination -->
+                {% if pagination.pages > 1 %}
+                <nav aria-label="Feedback pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.manage_feedback', page=pagination.prev_num, status=status_filter) }}">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in pagination.iter_pages() %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.manage_feedback', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.manage_feedback', page=pagination.next_num, status=status_filter) }}">Next</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Next</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> No feedback available.
                 </div>
